@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="appleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#14b8a6" />
+      <stop offset="50%" stop-color="#0d7a6b" />
+      <stop offset="100%" stop-color="#064e43" />
+    </linearGradient>
+  </defs>
+  <!-- Leaves -->
+  <path d="M 50 18 Q 42 6 32 10 Q 30 20 46 22 Z" fill="#0d7a6b" />
+  <path d="M 52 18 Q 62 4 72 10 Q 70 22 54 22 Z" fill="#14b8a6" />
+  <!-- Stem -->
+  <path d="M 49 22 Q 52 14 56 10" stroke="#064e43" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <!-- Apple Body -->
+  <path d="M 50 30 C 32 24 16 34 16 58 C 16 80 34 94 50 88 C 66 94 84 80 84 58 C 84 34 68 24 50 30 Z" fill="url(#appleGrad)" />
+  <!-- Person silhouette cutout -->
+  <circle cx="50" cy="45" r="5" fill="#ffffff" />
+  <path d="M 38 68 C 42 56 46 54 50 54 C 54 54 58 56 62 68 C 58 64 54 59 50 59 C 46 59 42 64 38 68 Z" fill="#ffffff" />
+</svg>
