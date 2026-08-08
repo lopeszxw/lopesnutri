@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogOut, Users, Calendar, Utensils, UserCheck } from "lucide-react";
+import { LogOut, Users, Calendar, Utensils, UserCheck, Database, CheckCircle2 } from "lucide-react";
 import { authClient } from "../auth";
+import { sql } from "../db";
 import Logo from "../components/Logo";
 import ThemeToggle from "../components/ThemeToggle";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [stats, setStats] = useState({ pacientes: 0, consultas: 0, planos: 0 });
+  const [dbConnected, setDbConnected] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -22,6 +25,28 @@ export default function Dashboard() {
     };
     fetchUser();
   }, []);
+
+  useEffect(() => {
+    const fetchDbStats = async () => {
+      try {
+        const [pacientesRes, consultasRes, planosRes] = await Promise.all([
+          sql`SELECT COUNT(*) FROM pacientes`,
+          sql`SELECT COUNT(*) FROM consultas`,
+          sql`SELECT COUNT(*) FROM planos_alimentares`
+        ]);
+        setStats({
+          pacientes: parseInt(pacientesRes[0]?.count || 0, 10),
+          consultas: parseInt(consultasRes[0]?.count || 0, 10),
+          planos: parseInt(planosRes[0]?.count || 0, 10)
+        });
+        setDbConnected(true);
+      } catch (err) {
+        console.error("Erro ao conectar ou consultar Neon Database", err);
+      }
+    };
+    fetchDbStats();
+  }, []);
+
 
   const handleLogout = async () => {
     try {
@@ -129,8 +154,8 @@ export default function Dashboard() {
                 <Users size={20} color="var(--primary)" />
               </div>
             </div>
-            <h3 style={{ fontSize: "1.5rem", fontWeight: "700" }}>--</h3>
-            <p style={{ fontSize: "0.8rem", color: "var(--text-light)", marginTop: "0.25rem" }}>Pronto para adicionar pacientes</p>
+            <h3 style={{ fontSize: "1.5rem", fontWeight: "700" }}>{stats.pacientes}</h3>
+            <p style={{ fontSize: "0.8rem", color: "var(--text-light)", marginTop: "0.25rem" }}>Pacientes cadastrados no banco</p>
           </div>
 
           <div style={{
@@ -147,8 +172,8 @@ export default function Dashboard() {
                 <Calendar size={20} color="var(--primary)" />
               </div>
             </div>
-            <h3 style={{ fontSize: "1.5rem", fontWeight: "700" }}>--</h3>
-            <p style={{ fontSize: "0.8rem", color: "var(--text-light)", marginTop: "0.25rem" }}>Nenhuma consulta agendada</p>
+            <h3 style={{ fontSize: "1.5rem", fontWeight: "700" }}>{stats.consultas}</h3>
+            <p style={{ fontSize: "0.8rem", color: "var(--text-light)", marginTop: "0.25rem" }}>Consultas agendadas</p>
           </div>
 
           <div style={{
@@ -165,10 +190,36 @@ export default function Dashboard() {
                 <Utensils size={20} color="var(--primary)" />
               </div>
             </div>
-            <h3 style={{ fontSize: "1.5rem", fontWeight: "700" }}>--</h3>
+            <h3 style={{ fontSize: "1.5rem", fontWeight: "700" }}>{stats.planos}</h3>
             <p style={{ fontSize: "0.8rem", color: "var(--text-light)", marginTop: "0.25rem" }}>Planos cadastrados no sistema</p>
           </div>
         </div>
+
+        {/* Database Status Indicator */}
+        <div style={{
+          marginTop: "2rem",
+          padding: "1rem 1.5rem",
+          backgroundColor: "var(--surface)",
+          borderRadius: "var(--radius-md)",
+          border: "1px solid var(--border)",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.75rem",
+          fontSize: "0.875rem"
+        }}>
+          <Database size={20} color={dbConnected ? "var(--primary)" : "var(--text-light)"} />
+          <span>Status do Banco de Dados (Neon):</span>
+          {dbConnected ? (
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", color: "#10b981", fontWeight: "600" }}>
+              <CheckCircle2 size={16} /> Conectado ao Neon Database (AWS sa-east-1)
+            </span>
+          ) : (
+            <span style={{ color: "var(--text-light)", fontStyle: "italic" }}>
+              Conectando ao banco...
+            </span>
+          )}
+        </div>
+
       </main>
     </div>
   );
