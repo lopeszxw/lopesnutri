@@ -90,6 +90,7 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -121,7 +122,7 @@ a:hover {
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -132,6 +133,11 @@ a:hover {
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .spin-animation {
@@ -148,7 +154,7 @@ a:hover {
 }
 
 .animate-fade-in {
-  animation: fadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* ==========================================================================
@@ -331,7 +337,7 @@ a:hover {
 }
 
 /* ==========================================================================
-   App Layout & Fixed Sidebar
+   App Layout & Fixed Sidebar (Desktop & Mobile Drawer)
    ========================================================================== */
 .app-container {
   display: flex;
@@ -361,6 +367,7 @@ a:hover {
   min-height: 100vh;
   background-color: var(--bg-main);
   transition: margin-left 0.3s ease;
+  width: 100%;
 }
 
 .sidebar-header {
@@ -378,12 +385,19 @@ a:hover {
 
 .sidebar-close-btn {
   display: none;
-  background: none;
-  border: none;
+  background: var(--surface-secondary);
+  border: 1px solid var(--border);
   color: var(--text-muted);
   cursor: pointer;
-  padding: 0.35rem;
+  padding: 0.4rem;
   border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+.sidebar-close-btn:hover {
+  background-color: var(--error-bg);
+  border-color: var(--error-border);
+  color: var(--error);
 }
 
 .sidebar-section-title {
@@ -402,6 +416,7 @@ a:hover {
   flex-direction: column;
   gap: 0.4rem;
   flex: 1;
+  overflow-y: auto;
 }
 
 .sidebar-nav-item {
@@ -556,8 +571,10 @@ a:hover {
 
 .mobile-topbar {
   display: none;
-  padding: 0.85rem 1.25rem;
-  background-color: var(--surface);
+  padding: 0.75rem 1.25rem;
+  background-color: var(--surface-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
   align-items: center;
   justify-content: space-between;
@@ -567,21 +584,27 @@ a:hover {
 }
 
 .mobile-menu-btn {
-  background: none;
-  border: none;
+  background: var(--surface-secondary);
+  border: 1px solid var(--border);
   color: var(--text-main);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  transition: background-color 0.2s;
 }
 
 .sidebar-backdrop {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(4px);
+  background-color: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   z-index: 90;
+  animation: fadeIn 0.2s ease;
 }
 
 .app-content-container {
@@ -665,6 +688,7 @@ a:hover {
 .btn-primary-action {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   padding: 0.65rem 1.25rem;
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
@@ -1136,6 +1160,7 @@ a:hover {
 .table-responsive-wrapper {
   overflow-x: auto;
   width: 100%;
+  -webkit-overflow-scrolling: touch;
 }
 
 .custom-data-table {
@@ -1208,13 +1233,13 @@ a:hover {
 }
 
 .paciente-row-avatar {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--primary) 0%, var(--accent-mint) 100%);
   color: white;
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1247,7 +1272,7 @@ a:hover {
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--text-main);
-  max-width: 220px;
+  max-width: 200px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1290,6 +1315,7 @@ a:hover {
   border-radius: var(--radius-full);
   font-size: 0.78rem;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .retorno-badge.scheduled {
@@ -1311,6 +1337,7 @@ a:hover {
   border-radius: var(--radius-full);
   font-size: 0.78rem;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .status-dot {
@@ -1398,7 +1425,7 @@ a:hover {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  padding: 0.4rem 0.75rem;
+  padding: 0.45rem 0.85rem;
   background-color: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -1426,8 +1453,8 @@ a:hover {
 }
 
 .pagination-number-btn {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
   background-color: transparent;
@@ -1740,7 +1767,7 @@ a:hover {
 }
 
 .input-with-suffix .styled-input-field {
-  padding-right: 4.5rem;
+  padding-right: 5.5rem;
 }
 
 .input-suffix-tag {
@@ -1835,6 +1862,7 @@ a:hover {
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   font-family: inherit;
+  min-height: 38px;
 }
 
 .checkbox-chip-btn:hover {
@@ -1868,6 +1896,7 @@ a:hover {
   border-radius: var(--radius-full);
   font-size: 0.82rem;
   font-weight: 700;
+  min-height: 38px;
 }
 
 .custom-tag-chip button {
@@ -1877,6 +1906,7 @@ a:hover {
   cursor: pointer;
   display: flex;
   align-items: center;
+  padding: 2px;
 }
 
 .add-tag-inline-row {
@@ -1901,6 +1931,7 @@ a:hover {
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
+  min-height: 38px;
 }
 
 .btn-add-tag:hover {
@@ -1928,6 +1959,7 @@ a:hover {
   font-size: 0.88rem;
   cursor: pointer;
   transition: all 0.2s ease;
+  min-height: 42px;
 }
 
 .radio-card input {
@@ -1980,6 +2012,8 @@ a:hover {
   font-weight: 600;
   padding: 0.65rem 1rem;
   transition: color 0.2s;
+  display: inline-flex;
+  align-items: center;
 }
 
 .btn-cancel-link:hover {
@@ -2000,6 +2034,7 @@ a:hover {
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: inherit;
+  min-height: 44px;
 }
 
 .btn-prev-tab:hover {
@@ -2021,6 +2056,7 @@ a:hover {
   cursor: pointer;
   transition: all 0.2s ease;
   font-family: inherit;
+  min-height: 44px;
 }
 
 .btn-next-tab:hover {
@@ -2042,6 +2078,7 @@ a:hover {
   box-shadow: var(--shadow-btn);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   font-family: inherit;
+  min-height: 44px;
 }
 
 .btn-submit-paciente:hover:not(:disabled) {
@@ -2163,7 +2200,7 @@ a:hover {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.35rem 0.75rem;
+  padding: 0.4rem 0.85rem;
   background-color: var(--bg-main);
   border: 1px solid var(--border);
   border-radius: var(--radius-full);
@@ -2497,7 +2534,7 @@ a:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem 1rem;
+  padding: 1rem;
   overflow-y: auto;
 }
 
@@ -2639,11 +2676,13 @@ a:hover {
 }
 
 /* ==========================================================================
-   Responsive Breakpoints
+   Responsive Breakpoints & Mobile Polish
    ========================================================================== */
 @media (max-width: 960px) {
   .app-sidebar {
     transform: translateX(-100%);
+    width: min(300px, 85vw);
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
   }
 
   .app-sidebar.open {
@@ -2672,17 +2711,30 @@ a:hover {
 
   .cadastro-tabs-nav {
     grid-template-columns: 1fr;
+    gap: 0.6rem;
+  }
+
+  .tab-nav-btn {
+    padding: 0.85rem 1rem;
   }
 
   .app-content-container {
-    padding: 1.25rem;
+    padding: 1.25rem 1rem;
   }
 }
 
 @media (max-width: 640px) {
+  /* Forms */
   .form-grid-2,
   .form-grid-3 {
     grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .styled-input-field,
+  .styled-select-field,
+  .styled-textarea-field {
+    font-size: 16px; /* Evita zoom involuntário no iOS */
   }
 
   .habits-grid {
@@ -2694,56 +2746,138 @@ a:hover {
   }
 
   .cadastro-form-card {
-    padding: 1.25rem;
-  }
-
-  .cadastro-form-footer {
-    flex-direction: column-reverse;
-    align-items: stretch;
-  }
-
-  .footer-left,
-  .footer-right {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .btn-submit-paciente,
-  .btn-next-tab,
-  .btn-prev-tab {
-    flex: 1;
-    justify-content: center;
-  }
-
-  .modal-content-card.modal-refined-card {
-    border-radius: var(--radius-lg);
-  }
-
-  .modal-form-body {
     padding: 1.25rem 1rem;
+    border-radius: var(--radius-lg);
   }
 
   .form-section-block {
     padding: 1rem;
   }
 
+  .cadastro-form-footer {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .footer-left,
+  .footer-right {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-submit-paciente,
+  .btn-next-tab,
+  .btn-prev-tab,
+  .btn-cancel-link {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
+  /* Header & Titles */
+  .dashboard-header,
+  .page-header-wrapper,
+  .novo-paciente-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .dashboard-title,
+  .page-title,
+  .header-main-title {
+    font-size: 1.5rem;
+  }
+
+  .btn-primary-action {
+    width: 100%;
+    padding: 0.85rem;
+  }
+
+  .table-controls-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-input-wrapper {
+    max-width: 100%;
+  }
+
+  /* Pacientes Sem Retorno */
   .paciente-sem-retorno-item {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
+    align-items: stretch;
+    gap: 0.85rem;
   }
 
   .paciente-status-col {
     width: 100%;
+    display: flex;
+    align-items: center;
     justify-content: space-between;
+  }
+
+  /* Profile Header */
+  .paciente-profile-header-card {
+    padding: 1.25rem 1rem;
   }
 
   .profile-header-main {
     flex-direction: column;
     text-align: center;
+    gap: 1rem;
+  }
+
+  .profile-header-title-row {
+    flex-direction: column;
+    gap: 0.35rem;
   }
 
   .profile-contact-chips {
     justify-content: center;
+  }
+
+  .profile-quick-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Modal */
+  .modal-content-card.modal-refined-card {
+    border-radius: var(--radius-lg);
+    max-height: 95vh;
+  }
+
+  .modal-header {
+    padding: 1.15rem 1.25rem;
+  }
+
+  .modal-form-body {
+    padding: 1.25rem 1rem;
+  }
+
+  .modal-footer-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn-submit-modal,
+  .btn-cancel-modal {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Pagination */
+  .table-pagination-footer {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  .pagination-buttons {
+    width: 100%;
+    justify-content: space-between;
   }
 }

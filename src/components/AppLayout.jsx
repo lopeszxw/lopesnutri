@@ -29,6 +29,18 @@ export default function AppLayout() {
     setSidebarOpen(false);
   }, [location.pathname]);
 
+  // Travar o scroll do body quando o drawer mobile estiver aberto
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [sidebarOpen]);
+
   return (
     <div className="app-container">
       {/* Fixed Sidebar */}
