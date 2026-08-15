@@ -145,11 +145,15 @@ CREATE TABLE planos_alimentares (
    ```
 
 3. **Configure as Variáveis de Ambiente:**
-   Crie um arquivo `.env` na raiz do projeto com as credenciais do seu projeto Neon:
+   Copie o arquivo de exemplo `.env.example` para `.env` (o `.env` é protegido pelo `.gitignore` e nunca vai para o GitHub) e preencha com as credenciais do seu projeto Neon:
+   ```bash
+   cp .env.example .env
+   ```
+   Exemplo das chaves necessárias em `.env`:
    ```env
-   VITE_NEON_AUTH_URL="https://ep-xxxx.neonauth.sa-east-1.aws.neon.tech/neondb/auth"
-   NEON_DB_URL="postgresql://usuario:senha@ep-xxxx-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require"
-   VITE_NEON_DB_URL="postgresql://usuario:senha@ep-xxxx-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require"
+   VITE_NEON_AUTH_URL="https://sua-instancia.neonauth.sa-east-1.aws.neon.tech/neondb/auth"
+   NEON_DB_URL="postgresql://seu_usuario:sua_senha@seu-host.sa-east-1.aws.neon.tech/neondb?sslmode=require"
+   VITE_NEON_DB_URL="postgresql://seu_usuario:sua_senha@seu-host.sa-east-1.aws.neon.tech/neondb?sslmode=require"
    ```
 
 4. **Inicie o servidor de desenvolvimento:**
