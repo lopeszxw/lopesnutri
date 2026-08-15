@@ -81,9 +81,39 @@ export default function NovoPaciente() {
   const [customRestricao, setCustomRestricao] = useState("");
   const [customAlergia, setCustomAlergia] = useState("");
 
+  // Funções utilitárias seguras para parsing de tipos do PostgreSQL
+  const formatDateForInput = (val) => {
+    if (!val) return "";
+    if (val instanceof Date) {
+      const year = val.getUTCFullYear();
+      const month = String(val.getUTCMonth() + 1).padStart(2, "0");
+      const day = String(val.getUTCDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+    if (typeof val === "string") {
+      return val.split("T")[0];
+    }
+    return "";
+  };
+
+  const parsePgArray = (val) => {
+    if (!val) return [];
+    if (Array.isArray(val)) return val;
+    if (typeof val === "string") {
+      const clean = val.replace(/^\{|\}$/g, "").trim();
+      if (!clean) return [];
+      return clean
+        .split(",")
+        .map((s) => s.replace(/^"|"$/g, "").trim())
+        .filter(Boolean);
+    }
+    return [];
+  };
+
   // Carregar dados existentes caso esteja em modo de Edição
   useEffect(() => {
-    if (!isEditMode || !id || !user?.id) return;
+    if (!isEditMode || !id) return;
+    if (!user?.id) return; // Aguardar carregamento da sessão do usuário
 
     const loadPaciente = async () => {
       setLoadingData(true);
@@ -102,27 +132,27 @@ export default function NovoPaciente() {
         const p = res[0];
         setFormData({
           nome: p.nome || "",
-          data_nascimento: p.data_nascimento ? p.data_nascimento.split("T")[0] : "",
+          data_nascimento: formatDateForInput(p.data_nascimento),
           sexo: p.sexo || "Feminino",
           telefone: p.whatsapp || "",
           whatsapp: p.whatsapp || "",
           email: p.email || "",
 
-          peso_inicial: p.peso_inicial ? String(p.peso_inicial) : "",
-          altura: p.altura ? String(p.altura) : "",
-          objetivos: Array.isArray(p.objetivos) ? p.objetivos : [],
+          peso_inicial: p.peso_inicial != null ? String(p.peso_inicial) : "",
+          altura: p.altura != null ? String(p.altura) : "",
+          objetivos: parsePgArray(p.objetivos),
           objetivo_texto: p.objetivo_texto || "",
           nivel_atividade: p.nivel_atividade || "Sedentário",
-          patologias: Array.isArray(p.patologias) ? p.patologias : [],
-          restricoes_alimentares: Array.isArray(p.restricoes_alimentares) ? p.restricoes_alimentares : [],
-          alergias: Array.isArray(p.alergias) ? p.alergias : [],
+          patologias: parsePgArray(p.patologias),
+          restricoes_alimentares: parsePgArray(p.restricoes_alimentares),
+          alergias: parsePgArray(p.alergias),
           medicamentos: p.medicamentos || "",
           suplementos: p.suplementos || "",
 
           refeicoes_por_dia: p.refeicoes_por_dia || 3,
           horario_acorda: p.horario_acorda || "",
           horario_dorme: p.horario_dorme || "",
-          litros_agua: p.litros_agua ? String(p.litros_agua) : "",
+          litros_agua: p.litros_agua != null ? String(p.litros_agua) : "",
           atividade_fisica: Boolean(p.atividade_fisica),
           atividade_fisica_descricao: p.atividade_fisica_descricao || "",
           observacoes: p.observacoes || ""
