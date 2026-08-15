@@ -24,7 +24,8 @@ import {
   ShieldAlert,
   Apple,
   Pill,
-  Target
+  Target,
+  Edit3
 } from "lucide-react";
 import { sql } from "../db";
 
@@ -223,16 +224,23 @@ export default function PacienteDetalhes() {
           <span>Voltar para Lista de Pacientes</span>
         </button>
 
-        <button
-          className="btn-primary-action"
-          onClick={() => {
-            setConsultaError("");
-            setModalConsultaOpen(true);
-          }}
-        >
-          <Plus size={18} />
-          <span>Nova Consulta / Evolução</span>
-        </button>
+        <div className="topbar-actions-group">
+          <Link to={`/pacientes/${id}/editar`} className="btn-secondary-action">
+            <Edit3 size={16} />
+            <span>Editar Dados</span>
+          </Link>
+
+          <button
+            className="btn-primary-action"
+            onClick={() => {
+              setConsultaError("");
+              setModalConsultaOpen(true);
+            }}
+          >
+            <Plus size={18} />
+            <span>Nova Consulta / Evolução</span>
+          </button>
+        </div>
       </div>
 
       {/* Main Profile Header Card */}
@@ -246,6 +254,14 @@ export default function PacienteDetalhes() {
             <div className="profile-header-title-row">
               <h1 className="profile-nome-heading">{paciente.nome}</h1>
               <span className="profile-status-badge active">Ativo</span>
+              <Link
+                to={`/pacientes/${id}/editar`}
+                className="btn-quick-edit-pill"
+                title="Editar informações do paciente"
+              >
+                <Edit3 size={13} />
+                <span>Editar</span>
+              </Link>
             </div>
 
             <div className="profile-contact-chips">

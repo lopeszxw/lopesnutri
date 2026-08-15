@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from "react";
-import { useNavigate, useOutletContext, Link } from "react-router-dom";
+import React, { useState, useMemo, useEffect } from "react";
+import { useNavigate, useOutletContext, useParams, Link } from "react-router-dom";
 import {
   ArrowLeft,
   User,
@@ -26,15 +26,20 @@ import {
   X,
   Target,
   ShieldAlert,
-  Apple
+  Apple,
+  Edit3
 } from "lucide-react";
 import { sql } from "../db";
 
 export default function NovoPaciente() {
   const { user } = useOutletContext() || {};
+  const { id } = useParams();
   const navigate = useNavigate();
 
+  const isEditMode = Boolean(id);
+
   const [activeTab, setActiveTab] = useState(1); // 1: Pessoal, 2: Clínico, 3: Hábitos
+  const [loadingData, setLoadingData] = useState(isEditMode);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
@@ -75,6 +80,63 @@ export default function NovoPaciente() {
   const [customPatologia, setCustomPatologia] = useState("");
   const [customRestricao, setCustomRestricao] = useState("");
   const [customAlergia, setCustomAlergia] = useState("");
+
+  // Carregar dados existentes caso esteja em modo de Edição
+  useEffect(() => {
+    if (!isEditMode || !id || !user?.id) return;
+
+    const loadPaciente = async () => {
+      setLoadingData(true);
+      setError("");
+      try {
+        const res = await sql`
+          SELECT * FROM pacientes 
+          WHERE id = ${id} AND nutricionista_id = ${user.id}
+        `;
+
+        if (!res || res.length === 0) {
+          setError("Paciente não encontrado ou você não tem permissão para editá-lo.");
+          return;
+        }
+
+        const p = res[0];
+        setFormData({
+          nome: p.nome || "",
+          data_nascimento: p.data_nascimento ? p.data_nascimento.split("T")[0] : "",
+          sexo: p.sexo || "Feminino",
+          telefone: p.whatsapp || "",
+          whatsapp: p.whatsapp || "",
+          email: p.email || "",
+
+          peso_inicial: p.peso_inicial ? String(p.peso_inicial) : "",
+          altura: p.altura ? String(p.altura) : "",
+          objetivos: Array.isArray(p.objetivos) ? p.objetivos : [],
+          objetivo_texto: p.objetivo_texto || "",
+          nivel_atividade: p.nivel_atividade || "Sedentário",
+          patologias: Array.isArray(p.patologias) ? p.patologias : [],
+          restricoes_alimentares: Array.isArray(p.restricoes_alimentares) ? p.restricoes_alimentares : [],
+          alergias: Array.isArray(p.alergias) ? p.alergias : [],
+          medicamentos: p.medicamentos || "",
+          suplementos: p.suplementos || "",
+
+          refeicoes_por_dia: p.refeicoes_por_dia || 3,
+          horario_acorda: p.horario_acorda || "",
+          horario_dorme: p.horario_dorme || "",
+          litros_agua: p.litros_agua ? String(p.litros_agua) : "",
+          atividade_fisica: Boolean(p.atividade_fisica),
+          atividade_fisica_descricao: p.atividade_fisica_descricao || "",
+          observacoes: p.observacoes || ""
+        });
+      } catch (err) {
+        console.error("Erro ao carregar paciente para edição:", err);
+        setError("Erro ao carregar dados do paciente.");
+      } finally {
+        setLoadingData(false);
+      }
+    };
+
+    loadPaciente();
+  }, [id, isEditMode, user?.id]);
 
   // Lista padrão de opções
   const objetivosOpcoes = [
@@ -245,7 +307,7 @@ export default function NovoPaciente() {
     }));
   };
 
-  // Submissão do Formulário
+  // Submissão do Formulário (Criação ou Edição)
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     setError("");
@@ -263,86 +325,137 @@ export default function NovoPaciente() {
 
     setSubmitting(true);
     try {
-      // Inserção no Neon PostgreSQL
-      const result = await sql`
-        INSERT INTO pacientes (
-          nutricionista_id,
-          nome,
-          email,
-          whatsapp,
-          sexo,
-          data_nascimento,
-          peso_inicial,
-          altura,
-          refeicoes_por_dia,
-          litros_agua,
-          atividade_fisica,
-          atividade_fisica_descricao,
-          nivel_atividade,
-          horario_acorda,
-          horario_dorme,
-          objetivos,
-          objetivo_texto,
-          patologias,
-          restricoes_alimentares,
-          alergias,
-          medicamentos,
-          suplementos,
-          observacoes
-        ) VALUES (
-          ${user.id},
-          ${formData.nome.trim()},
-          ${formData.email.trim() || null},
-          ${formData.whatsapp.trim() || formData.telefone.trim() || null},
-          ${formData.sexo || null},
-          ${formData.data_nascimento || null},
-          ${formData.peso_inicial ? parseFloat(formData.peso_inicial) : null},
-          ${formData.altura ? parseFloat(formData.altura) : null},
-          ${formData.refeicoes_por_dia ? parseInt(formData.refeicoes_por_dia, 10) : null},
-          ${formData.litros_agua ? parseFloat(formData.litros_agua) : null},
-          ${formData.atividade_fisica},
-          ${formData.atividade_fisica ? formData.atividade_fisica_descricao.trim() || null : null},
-          ${formData.nivel_atividade || null},
-          ${formData.horario_acorda.trim() || null},
-          ${formData.horario_dorme.trim() || null},
-          ${formData.objetivos.length > 0 ? formData.objetivos : null},
-          ${formData.objetivo_texto.trim() || null},
-          ${formData.patologias.length > 0 ? formData.patologias : null},
-          ${formData.restricoes_alimentares.length > 0 ? formData.restricoes_alimentares : null},
-          ${formData.alergias.length > 0 ? formData.alergias : null},
-          ${formData.medicamentos.trim() || null},
-          ${formData.suplementos.trim() || null},
-          ${formData.observacoes.trim() || null}
-        )
-        RETURNING id
-      `;
+      if (isEditMode) {
+        // Atualização no Neon PostgreSQL
+        await sql`
+          UPDATE pacientes SET
+            nome = ${formData.nome.trim()},
+            email = ${formData.email.trim() || null},
+            whatsapp = ${formData.whatsapp.trim() || formData.telefone.trim() || null},
+            sexo = ${formData.sexo || null},
+            data_nascimento = ${formData.data_nascimento || null},
+            peso_inicial = ${formData.peso_inicial ? parseFloat(formData.peso_inicial) : null},
+            altura = ${formData.altura ? parseFloat(formData.altura) : null},
+            refeicoes_por_dia = ${formData.refeicoes_por_dia ? parseInt(formData.refeicoes_por_dia, 10) : null},
+            litros_agua = ${formData.litros_agua ? parseFloat(formData.litros_agua) : null},
+            atividade_fisica = ${formData.atividade_fisica},
+            atividade_fisica_descricao = ${formData.atividade_fisica ? formData.atividade_fisica_descricao.trim() || null : null},
+            nivel_atividade = ${formData.nivel_atividade || null},
+            horario_acorda = ${formData.horario_acorda.trim() || null},
+            horario_dorme = ${formData.horario_dorme.trim() || null},
+            objetivos = ${formData.objetivos.length > 0 ? formData.objetivos : null},
+            objetivo_texto = ${formData.objetivo_texto.trim() || null},
+            patologias = ${formData.patologias.length > 0 ? formData.patologias : null},
+            restricoes_alimentares = ${formData.restricoes_alimentares.length > 0 ? formData.restricoes_alimentares : null},
+            alergias = ${formData.alergias.length > 0 ? formData.alergias : null},
+            medicamentos = ${formData.medicamentos.trim() || null},
+            suplementos = ${formData.suplementos.trim() || null},
+            observacoes = ${formData.observacoes.trim() || null}
+          WHERE id = ${id} AND nutricionista_id = ${user.id}
+        `;
 
-      setSuccessMsg("Paciente cadastrado com sucesso!");
-      const newId = result[0]?.id;
+        setSuccessMsg("Dados do paciente atualizados com sucesso!");
+        setTimeout(() => {
+          navigate(`/pacientes/${id}`);
+        }, 700);
+      } else {
+        // Inserção de Novo Paciente
+        const result = await sql`
+          INSERT INTO pacientes (
+            nutricionista_id,
+            nome,
+            email,
+            whatsapp,
+            sexo,
+            data_nascimento,
+            peso_inicial,
+            altura,
+            refeicoes_por_dia,
+            litros_agua,
+            atividade_fisica,
+            atividade_fisica_descricao,
+            nivel_atividade,
+            horario_acorda,
+            horario_dorme,
+            objetivos,
+            objetivo_texto,
+            patologias,
+            restricoes_alimentares,
+            alergias,
+            medicamentos,
+            suplementos,
+            observacoes
+          ) VALUES (
+            ${user.id},
+            ${formData.nome.trim()},
+            ${formData.email.trim() || null},
+            ${formData.whatsapp.trim() || formData.telefone.trim() || null},
+            ${formData.sexo || null},
+            ${formData.data_nascimento || null},
+            ${formData.peso_inicial ? parseFloat(formData.peso_inicial) : null},
+            ${formData.altura ? parseFloat(formData.altura) : null},
+            ${formData.refeicoes_por_dia ? parseInt(formData.refeicoes_por_dia, 10) : null},
+            ${formData.litros_agua ? parseFloat(formData.litros_agua) : null},
+            ${formData.atividade_fisica},
+            ${formData.atividade_fisica ? formData.atividade_fisica_descricao.trim() || null : null},
+            ${formData.nivel_atividade || null},
+            ${formData.horario_acorda.trim() || null},
+            ${formData.horario_dorme.trim() || null},
+            ${formData.objetivos.length > 0 ? formData.objetivos : null},
+            ${formData.objetivo_texto.trim() || null},
+            ${formData.patologias.length > 0 ? formData.patologias : null},
+            ${formData.restricoes_alimentares.length > 0 ? formData.restricoes_alimentares : null},
+            ${formData.alergias.length > 0 ? formData.alergias : null},
+            ${formData.medicamentos.trim() || null},
+            ${formData.suplementos.trim() || null},
+            ${formData.observacoes.trim() || null}
+          )
+          RETURNING id
+        `;
 
-      // Redireciona para o perfil do paciente após 800ms
-      setTimeout(() => {
-        if (newId) {
-          navigate(`/pacientes/${newId}`);
-        } else {
-          navigate("/pacientes");
-        }
-      }, 800);
+        setSuccessMsg("Paciente cadastrado com sucesso!");
+        const newId = result[0]?.id;
+        setTimeout(() => {
+          if (newId) {
+            navigate(`/pacientes/${newId}`);
+          } else {
+            navigate("/pacientes");
+          }
+        }, 700);
+      }
     } catch (err) {
       console.error("Erro ao salvar paciente:", err);
-      setError("Erro ao cadastrar paciente no banco de dados. Verifique os dados.");
+      setError("Erro ao salvar dados do paciente no banco de dados. Verifique as informações.");
       setSubmitting(false);
     }
   };
+
+  if (loadingData) {
+    return (
+      <div className="novo-paciente-container">
+        <div className="loading-spinner-box" style={{ padding: "4rem 0" }}>
+          <div className="spinner" />
+          <span>Carregando dados do paciente para edição...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="novo-paciente-container animate-fade-in">
       {/* Top Header & Breadcrumb */}
       <div className="novo-paciente-header">
         <div className="header-nav-row">
-          <Link to="/pacientes" className="btn-back-link">
+          <Link
+            to={isEditMode ? `/pacientes/${id}` : "/pacientes"}
+            className="btn-back-link"
+          >
             <ArrowLeft size={18} />
-            <span>Voltar para Lista de Pacientes</span>
+            <span>
+              {isEditMode
+                ? "Voltar para Perfil do Paciente"
+                : "Voltar para Lista de Pacientes"}
+            </span>
           </Link>
 
           <span className="step-indicator-badge">
@@ -352,12 +465,16 @@ export default function NovoPaciente() {
 
         <div className="header-title-box">
           <div className="header-badge-icon">
-            <User size={24} />
+            {isEditMode ? <Edit3 size={24} /> : <User size={24} />}
           </div>
           <div>
-            <h1 className="header-main-title">Cadastro de Novo Paciente</h1>
+            <h1 className="header-main-title">
+              {isEditMode ? "Editar Dados do Paciente" : "Cadastro de Novo Paciente"}
+            </h1>
             <p className="header-sub-title">
-              Preencha as informações do paciente organizadas por abas para um prontuário completo.
+              {isEditMode
+                ? `Atualize as informações do prontuário de ${formData.nome || "paciente"}.`
+                : "Preencha as informações do paciente organizadas por abas para um prontuário completo."}
             </p>
           </div>
         </div>
@@ -374,7 +491,7 @@ export default function NovoPaciente() {
       {successMsg && (
         <div className="success-banner animate-fade-in">
           <CheckCircle2 size={20} />
-          <span>{successMsg} Redirecionando para o perfil...</span>
+          <span>{successMsg} Redirecionando...</span>
         </div>
       )}
 
@@ -1162,7 +1279,10 @@ export default function NovoPaciente() {
                 <span>Voltar Aba</span>
               </button>
             ) : (
-              <Link to="/pacientes" className="btn-cancel-link">
+              <Link
+                to={isEditMode ? `/pacientes/${id}` : "/pacientes"}
+                className="btn-cancel-link"
+              >
                 Cancelar
               </Link>
             )}
@@ -1188,12 +1308,12 @@ export default function NovoPaciente() {
               {submitting ? (
                 <>
                   <div className="spinner-sm" />
-                  <span>Salvando Paciente...</span>
+                  <span>{isEditMode ? "Salvando Alterações..." : "Salvando Paciente..."}</span>
                 </>
               ) : (
                 <>
                   <CheckCircle2 size={18} />
-                  <span>Salvar Paciente</span>
+                  <span>{isEditMode ? "Salvar Alterações" : "Salvar Paciente"}</span>
                 </>
               )}
             </button>
