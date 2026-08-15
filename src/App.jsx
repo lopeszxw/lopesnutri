@@ -3,6 +3,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Pacientes from "./pages/Pacientes";
+import NovoPaciente from "./pages/NovoPaciente";
 import PacienteDetalhes from "./pages/PacienteDetalhes";
 import AuthLayout from "./components/AuthLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -25,6 +26,7 @@ function App() {
             <Route element={<AppLayout />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/pacientes" element={<Pacientes />} />
+              <Route path="/pacientes/novo" element={<NovoPaciente />} />
               <Route path="/pacientes/:id" element={<PacienteDetalhes />} />
             </Route>
           </Route>

@@ -30,6 +30,8 @@
   --warning-border: #fde68a;
   --success: #10b981;
   --success-bg: #ecfdf5;
+  --info: #0284c7;
+  --info-bg: #e0f2fe;
 
   --shadow-sm: 0 2px 4px rgba(13, 122, 107, 0.04);
   --shadow-card: 0 12px 30px -10px rgba(13, 122, 107, 0.08), 0 0 0 1px rgba(13, 122, 107, 0.05);
@@ -74,6 +76,8 @@
   --warning-border: rgba(251, 191, 36, 0.3);
   --success: #34d399;
   --success-bg: rgba(52, 211, 153, 0.15);
+  --info: #38bdf8;
+  --info-bg: rgba(56, 189, 248, 0.15);
 
   --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.4);
   --shadow-card: 0 16px 40px -12px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.07);
@@ -301,6 +305,20 @@ a:hover {
   align-items: flex-start;
   gap: 0.6rem;
   line-height: 1.4;
+}
+
+.success-banner {
+  color: var(--success);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+  background-color: var(--success-bg);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 0.85rem 1.25rem;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
 }
 
 .auth-footer {
@@ -668,25 +686,6 @@ a:hover {
   color: white;
 }
 
-.btn-secondary-action {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.65rem 1.25rem;
-  background-color: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-md);
-  color: var(--text-main);
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btn-secondary-action:hover {
-  border-color: var(--text-muted);
-}
-
 .dashboard-main-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -1020,7 +1019,7 @@ a:hover {
 }
 
 /* ==========================================================================
-   Pacientes Page (Prompt 4)
+   Pacientes Page (Prompt 4 - Listagem)
    ========================================================================== */
 .pacientes-page-container {
   display: flex;
@@ -1233,6 +1232,39 @@ a:hover {
   color: var(--text-muted);
 }
 
+.cell-objetivo-box {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.cell-icon-accent {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.objetivo-pill {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-main);
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
+}
+
+.contact-column-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.cell-text-sm {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
 .cell-flex-item {
   display: flex;
   align-items: center;
@@ -1247,6 +1279,7 @@ a:hover {
 
 .cell-muted-text {
   color: var(--text-light);
+  font-size: 0.85rem;
 }
 
 .retorno-badge {
@@ -1420,136 +1453,175 @@ a:hover {
 }
 
 /* ==========================================================================
-   Refined Modals & Form System (High Polish)
+   Página Novo Paciente (Prompt 4 - Cadastro em 3 Abas)
    ========================================================================== */
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  z-index: 200;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem 1rem;
-  overflow-y: auto;
-}
-
-.modal-content-card.modal-refined-card {
-  width: 100%;
-  max-width: 680px;
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-modal);
-  max-height: 90vh;
-  overflow-y: auto;
-  position: relative;
+.novo-paciente-container {
   display: flex;
   flex-direction: column;
+  gap: 1.75rem;
+  animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.modal-header {
-  padding: 1.4rem 1.75rem;
-  border-bottom: 1px solid var(--border-light);
+.novo-paciente-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.header-nav-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: var(--surface);
-  position: sticky;
-  top: 0;
-  z-index: 10;
 }
 
-.modal-header-title {
+.step-indicator-badge {
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.3rem 0.8rem;
+  background-color: var(--primary-light);
+  color: var(--primary);
+  border-radius: var(--radius-full);
+}
+
+.header-title-box {
   display: flex;
   align-items: center;
-  gap: 0.9rem;
+  gap: 1rem;
 }
 
-.modal-icon-badge {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--primary-light) 0%, rgba(47, 163, 142, 0.15) 100%);
-  color: var(--primary);
+.header-badge-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px -4px rgba(13, 122, 107, 0.3);
+  flex-shrink: 0;
+}
+
+.header-main-title {
+  font-size: 1.85rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-main);
+}
+
+.header-sub-title {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+/* Tabs Navigation Bar */
+.cadastro-tabs-nav {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.tab-nav-btn {
+  background-color: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--shadow-sm);
+  font-family: inherit;
+}
+
+.tab-nav-btn:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+
+.tab-nav-btn.active {
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--surface) 100%);
+  border-color: var(--primary);
+  box-shadow: 0 8px 25px -8px rgba(13, 122, 107, 0.25);
+}
+
+.tab-number {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: var(--bg-main);
+  border: 1.5px solid var(--border);
+  color: var(--text-muted);
+  font-weight: 800;
+  font-size: 0.95rem;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(13, 122, 107, 0.12);
-}
-
-.modal-header-title h3 {
-  font-size: 1.25rem;
-  font-weight: 800;
-  color: var(--text-main);
-  letter-spacing: -0.01em;
-}
-
-.modal-header-title p {
-  font-size: 0.84rem;
-  color: var(--text-muted);
-  margin-top: 0.1rem;
-}
-
-.modal-close-btn {
-  background-color: var(--bg-main);
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  cursor: pointer;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   transition: all 0.2s ease;
 }
 
-.modal-close-btn:hover {
-  background-color: var(--error-bg);
-  border-color: var(--error-border);
-  color: var(--error);
-  transform: rotate(90deg);
+.tab-nav-btn.active .tab-number {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: white;
+  box-shadow: 0 4px 10px rgba(13, 122, 107, 0.3);
 }
 
-.modal-form-body {
-  padding: 1.75rem;
+.tab-btn-text strong {
+  display: block;
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.tab-btn-text span {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+/* Cadastro Form Card & Panes */
+.cadastro-form-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.tab-pane {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
 
-/* Form Section Blocks */
+.tab-pane-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.tab-pane-title h3 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
 .form-section-block {
   background-color: var(--surface-secondary);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 1.25rem 1.4rem;
+  padding: 1.35rem 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 1.15rem;
-}
-
-.form-section-header {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.form-section-icon {
-  width: 26px;
-  height: 26px;
-  border-radius: 6px;
-  background-color: var(--primary-light);
-  color: var(--primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .form-section-title {
@@ -1558,18 +1630,19 @@ a:hover {
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--text-main);
+  display: block;
 }
 
 .form-grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1.15rem;
+  gap: 1.25rem;
 }
 
 .form-grid-3 {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 1.15rem;
+  gap: 1.25rem;
 }
 
 .form-group-field {
@@ -1580,7 +1653,7 @@ a:hover {
 }
 
 .form-label {
-  font-size: 0.84rem;
+  font-size: 0.85rem;
   font-weight: 700;
   color: var(--text-main);
   display: flex;
@@ -1592,6 +1665,24 @@ a:hover {
   color: var(--error);
 }
 
+.field-helper-chip {
+  font-size: 0.76rem;
+  color: var(--primary);
+  background-color: var(--primary-light);
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-sm);
+  display: inline-block;
+  margin-top: 0.25rem;
+  width: fit-content;
+}
+
+.field-hint-text {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Styled Inputs, Icons and Suffixes */
 .input-with-icon {
   position: relative;
   display: flex;
@@ -1601,7 +1692,7 @@ a:hover {
 
 .input-icon-left {
   position: absolute;
-  left: 0.9rem;
+  left: 0.95rem;
   color: var(--text-light);
   pointer-events: none;
   transition: color 0.2s ease;
@@ -1613,17 +1704,22 @@ a:hover {
 
 .styled-input-field {
   width: 100%;
-  padding: 0.75rem 1rem 0.75rem 2.65rem;
+  padding: 0.78rem 1rem 0.78rem 2.75rem;
   background-color: var(--surface);
   border: 1.5px solid var(--border);
   border-radius: var(--radius-md);
   color: var(--text-main);
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   font-weight: 500;
   outline: none;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.styled-input-field.sm {
+  padding: 0.55rem 0.85rem;
+  font-size: 0.85rem;
 }
 
 .styled-input-field::placeholder {
@@ -1636,6 +1732,30 @@ a:hover {
   box-shadow: 0 0 0 3.5px rgba(16, 147, 129, 0.2);
 }
 
+.input-with-suffix {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.input-with-suffix .styled-input-field {
+  padding-right: 4.5rem;
+}
+
+.input-suffix-tag {
+  position: absolute;
+  right: 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background-color: var(--bg-main);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  pointer-events: none;
+}
+
 /* Custom Select Field */
 .select-wrapper {
   position: relative;
@@ -1644,13 +1764,13 @@ a:hover {
 
 .styled-select-field {
   width: 100%;
-  padding: 0.75rem 2.5rem 0.75rem 1rem;
+  padding: 0.78rem 2.5rem 0.78rem 1rem;
   background-color: var(--surface);
   border: 1.5px solid var(--border);
   border-radius: var(--radius-md);
   color: var(--text-main);
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   font-weight: 600;
   outline: none;
   cursor: pointer;
@@ -1681,17 +1801,143 @@ a:hover {
   border-radius: var(--radius-md);
   color: var(--text-main);
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   line-height: 1.5;
   outline: none;
   resize: vertical;
-  min-height: 80px;
+  min-height: 90px;
   transition: all 0.2s ease;
 }
 
 .styled-textarea-field:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3.5px rgba(16, 147, 129, 0.2);
+}
+
+/* Checkbox Chips & Tag Selector */
+.checkbox-chips-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.checkbox-chip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.95rem;
+  background-color: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-full);
+  color: var(--text-main);
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: inherit;
+}
+
+.checkbox-chip-btn:hover {
+  border-color: var(--primary);
+  background-color: var(--primary-light);
+  color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.checkbox-chip-btn.selected {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  border-color: var(--primary);
+  color: white;
+  box-shadow: 0 4px 12px rgba(13, 122, 107, 0.25);
+}
+
+.checkbox-chip-btn.none-chip.selected {
+  background: var(--text-light);
+  border-color: var(--text-light);
+  color: white;
+}
+
+.custom-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.85rem;
+  background-color: var(--primary-light);
+  border: 1px solid var(--primary);
+  color: var(--primary);
+  border-radius: var(--radius-full);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.custom-tag-chip button {
+  background: none;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.add-tag-inline-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+  max-width: 420px;
+}
+
+.btn-add-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.55rem 0.95rem;
+  background-color: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-add-tag:hover {
+  background-color: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+/* Radio Group Row */
+.radio-group-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.radio-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.25rem;
+  background-color: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.radio-card input {
+  display: none;
+}
+
+.radio-card.active {
+  background-color: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
 /* IMC Calculation Banner */
@@ -1704,71 +1950,47 @@ a:hover {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 0.9rem;
+  padding: 0.6rem 1rem;
   border-radius: var(--radius-md);
-  border: 1px solid transparent;
-  font-size: 0.84rem;
+  border: 1.5px solid transparent;
+  font-size: 0.88rem;
   font-weight: 600;
 }
 
-/* Quick Objective Suggestion Chips */
-.quick-tags-container {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  margin-top: 0.5rem;
-}
-
-.quick-tags-title {
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  letter-spacing: 0.05em;
-}
-
-.quick-tags-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-
-.quick-tag-chip {
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  padding: 0.28rem 0.65rem;
-  border-radius: var(--radius-full);
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: inherit;
-}
-
-.quick-tag-chip:hover {
-  background-color: var(--primary-light);
-  border-color: var(--primary);
-  color: var(--primary);
-  transform: translateY(-1px);
-}
-
-/* Modal Actions Footer */
-.modal-footer-actions {
+/* Form Footer Navigation */
+.cadastro-form-footer {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 0.85rem;
-  padding-top: 1.25rem;
+  justify-content: space-between;
+  padding-top: 1.5rem;
   border-top: 1px solid var(--border-light);
-  background-color: var(--surface);
-  position: sticky;
-  bottom: 0;
-  z-index: 10;
+  gap: 1rem;
 }
 
-.btn-cancel-modal {
-  padding: 0.75rem 1.4rem;
+.footer-left,
+.footer-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.btn-cancel-link {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.65rem 1rem;
+  transition: color 0.2s;
+}
+
+.btn-cancel-link:hover {
+  color: var(--error);
+}
+
+.btn-prev-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.75rem 1.35rem;
   background-color: transparent;
   border: 1.5px solid var(--border);
   border-radius: var(--radius-md);
@@ -1780,12 +2002,32 @@ a:hover {
   font-family: inherit;
 }
 
-.btn-cancel-modal:hover:not(:disabled) {
+.btn-prev-tab:hover {
   background-color: var(--bg-main);
   border-color: var(--text-muted);
 }
 
-.btn-submit-modal {
+.btn-next-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--surface);
+  border: 1.5px solid var(--primary);
+  border-radius: var(--radius-md);
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.btn-next-tab:hover {
+  background-color: var(--primary-light);
+}
+
+.btn-submit-paciente {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -1798,20 +2040,19 @@ a:hover {
   font-size: 0.95rem;
   cursor: pointer;
   box-shadow: var(--shadow-btn);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   font-family: inherit;
 }
 
-.btn-submit-modal:hover:not(:disabled) {
+.btn-submit-paciente:hover:not(:disabled) {
   background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary) 100%);
   box-shadow: var(--shadow-btn-hover);
   transform: translateY(-1.5px);
 }
 
-.btn-submit-modal:disabled {
+.btn-submit-paciente:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  transform: none;
 }
 
 /* ==========================================================================
@@ -2001,8 +2242,113 @@ a:hover {
   color: var(--text-main);
 }
 
+.profile-chips-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.profile-chip-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.65rem;
+  background-color: var(--primary-light);
+  color: var(--primary);
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.profile-chip-item.warning {
+  background-color: var(--warning-bg);
+  color: var(--warning);
+}
+
+.profile-chip-item.info {
+  background-color: var(--info-bg);
+  color: var(--info);
+}
+
+.profile-chip-item.danger {
+  background-color: var(--error-bg);
+  color: var(--error);
+}
+
+.profile-details-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.profile-sub-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.profile-sub-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.profile-meds-box {
+  background-color: var(--bg-main);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.med-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-main);
+}
+
+.med-row strong {
+  color: var(--text-muted);
+}
+
+.habits-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+.habit-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background-color: var(--bg-main);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.75rem;
+}
+
+.habit-item.span-2 {
+  grid-column: 1 / -1;
+}
+
+.habit-label {
+  display: block;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.habit-item strong {
+  font-size: 0.88rem;
+  color: var(--text-main);
+}
+
 .goal-highlight-text {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: var(--text-main);
   background-color: var(--primary-light);
@@ -2031,6 +2377,7 @@ a:hover {
   background-color: var(--primary-hover);
 }
 
+/* Consultas Timeline */
 .consultas-timeline-container {
   display: flex;
   flex-direction: column;
@@ -2139,6 +2486,158 @@ a:hover {
   line-height: 1.4;
 }
 
+/* Modals */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+  overflow-y: auto;
+}
+
+.modal-content-card.modal-refined-card {
+  width: 100%;
+  max-width: 680px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-modal);
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  padding: 1.4rem 1.75rem;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.modal-header-title {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.modal-icon-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--primary-light) 0%, rgba(47, 163, 142, 0.15) 100%);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modal-header-title h3 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.modal-header-title p {
+  font-size: 0.84rem;
+  color: var(--text-muted);
+}
+
+.modal-close-btn {
+  background-color: var(--bg-main);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.modal-close-btn:hover {
+  background-color: var(--error-bg);
+  border-color: var(--error-border);
+  color: var(--error);
+  transform: rotate(90deg);
+}
+
+.modal-form-body {
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.modal-footer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.85rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border-light);
+  background-color: var(--surface);
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+}
+
+.btn-cancel-modal {
+  padding: 0.75rem 1.4rem;
+  background-color: transparent;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.btn-cancel-modal:hover:not(:disabled) {
+  background-color: var(--bg-main);
+  border-color: var(--text-muted);
+}
+
+.btn-submit-modal {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.75rem;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: var(--shadow-btn);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: inherit;
+}
+
+.btn-submit-modal:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary) 100%);
+  box-shadow: var(--shadow-btn-hover);
+  transform: translateY(-1.5px);
+}
+
 /* ==========================================================================
    Responsive Breakpoints
    ========================================================================== */
@@ -2171,6 +2670,10 @@ a:hover {
     grid-template-columns: 1fr;
   }
 
+  .cadastro-tabs-nav {
+    grid-template-columns: 1fr;
+  }
+
   .app-content-container {
     padding: 1.25rem;
   }
@@ -2180,6 +2683,36 @@ a:hover {
   .form-grid-2,
   .form-grid-3 {
     grid-template-columns: 1fr;
+  }
+
+  .habits-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .habit-item.span-2 {
+    grid-column: auto;
+  }
+
+  .cadastro-form-card {
+    padding: 1.25rem;
+  }
+
+  .cadastro-form-footer {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .footer-left,
+  .footer-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .btn-submit-paciente,
+  .btn-next-tab,
+  .btn-prev-tab {
+    flex: 1;
+    justify-content: center;
   }
 
   .modal-content-card.modal-refined-card {

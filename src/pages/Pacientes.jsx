@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useNavigate, useOutletContext, Link } from "react-router-dom";
 import {
   Users,
   Search,
@@ -12,15 +12,9 @@ import {
   Phone,
   Mail,
   Calendar,
-  AlertCircle,
   X,
   CalendarClock,
-  User,
-  Scale,
-  Ruler,
-  Target,
-  Activity,
-  CheckCircle2
+  Target
 } from "lucide-react";
 import { sql } from "../db";
 
@@ -36,22 +30,6 @@ export default function Pacientes() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Modal Novo Paciente
-  const [modalOpen, setModalOpen] = useState(false);
-  const [formSubmitting, setFormSubmitting] = useState(false);
-  const [formError, setFormError] = useState("");
-  const [newPatient, setNewPatient] = useState({
-    nome: "",
-    email: "",
-    whatsapp: "",
-    sexo: "Feminino",
-    data_nascimento: "",
-    peso_inicial: "",
-    altura: "",
-    objetivo_texto: "",
-    observacoes: ""
-  });
-
   const fetchPacientes = async () => {
     if (!user?.id) return;
     setLoading(true);
@@ -64,13 +42,15 @@ export default function Pacientes() {
           p.whatsapp,
           p.created_at,
           p.sexo,
+          p.objetivos,
+          p.objetivo_texto,
           MAX(c.data_consulta) AS ultima_consulta,
           MAX(c.proximo_retorno) AS proximo_retorno,
           COUNT(c.id)::int AS total_consultas
         FROM pacientes p
         LEFT JOIN consultas c ON p.id = c.paciente_id
         WHERE p.nutricionista_id = ${user.id}
-        GROUP BY p.id, p.nome, p.email, p.whatsapp, p.created_at, p.sexo
+        GROUP BY p.id, p.nome, p.email, p.whatsapp, p.created_at, p.sexo, p.objetivos, p.objetivo_texto
         ORDER BY p.created_at DESC
       `;
       setPacientes(data || []);
@@ -129,7 +109,15 @@ export default function Pacientes() {
       const nome = (p.nome || "").toLowerCase();
       const email = (p.email || "").toLowerCase();
       const whatsapp = (p.whatsapp || "").toLowerCase();
-      return nome.includes(term) || email.includes(term) || whatsapp.includes(term);
+      const objetivo = (p.objetivo_texto || "").toLowerCase();
+      const objetivosArr = (p.objetivos || []).join(" ").toLowerCase();
+      return (
+        nome.includes(term) ||
+        email.includes(term) ||
+        whatsapp.includes(term) ||
+        objetivo.includes(term) ||
+        objetivosArr.includes(term)
+      );
     });
   }, [pacientes, searchTerm]);
 
@@ -161,101 +149,6 @@ export default function Pacientes() {
     setCurrentPage(1);
   }, [searchTerm]);
 
-  // Cálculo Dinâmico do IMC
-  const calculatedImc = useMemo(() => {
-    const peso = parseFloat(newPatient.peso_inicial);
-    const alturaCm = parseFloat(newPatient.altura);
-    if (!peso || !alturaCm || alturaCm <= 0) return null;
-    const alturaM = alturaCm / 100;
-    const imc = peso / (alturaM * alturaM);
-    let classificacao = "Eutrofia (Normal)";
-    let cor = "var(--success)";
-
-    if (imc < 18.5) {
-      classificacao = "Baixo Peso";
-      cor = "var(--warning)";
-    } else if (imc >= 25 && imc < 30) {
-      classificacao = "Sobrepeso";
-      cor = "var(--warning)";
-    } else if (imc >= 30) {
-      classificacao = "Obesidade";
-      cor = "var(--error)";
-    }
-
-    return {
-      valor: imc.toFixed(1),
-      classificacao,
-      cor
-    };
-  }, [newPatient.peso_inicial, newPatient.altura]);
-
-  const quickObjectives = [
-    "Emagrecimento Saudável",
-    "Hipertrofia Muscular",
-    "Reeducação Alimentar",
-    "Controle Glicêmico (Diabetes)",
-    "Melhora de Performance Esportiva",
-    "Saúde Digestiva / Intestinal"
-  ];
-
-  const handleCreatePatient = async (e) => {
-    e.preventDefault();
-    setFormError("");
-
-    if (!newPatient.nome.trim()) {
-      setFormError("O nome do paciente é obrigatório.");
-      return;
-    }
-
-    setFormSubmitting(true);
-    try {
-      await sql`
-        INSERT INTO pacientes (
-          nutricionista_id,
-          nome,
-          email,
-          whatsapp,
-          sexo,
-          data_nascimento,
-          peso_inicial,
-          altura,
-          objetivo_texto,
-          observacoes
-        ) VALUES (
-          ${user.id},
-          ${newPatient.nome.trim()},
-          ${newPatient.email.trim() || null},
-          ${newPatient.whatsapp.trim() || null},
-          ${newPatient.sexo || null},
-          ${newPatient.data_nascimento || null},
-          ${newPatient.peso_inicial ? parseFloat(newPatient.peso_inicial) : null},
-          ${newPatient.altura ? parseFloat(newPatient.altura) : null},
-          ${newPatient.objetivo_texto.trim() || null},
-          ${newPatient.observacoes.trim() || null}
-        )
-      `;
-
-      setNewPatient({
-        nome: "",
-        email: "",
-        whatsapp: "",
-        sexo: "Feminino",
-        data_nascimento: "",
-        peso_inicial: "",
-        altura: "",
-        objetivo_texto: "",
-        observacoes: ""
-      });
-      setModalOpen(false);
-      await fetchPacientes();
-    } catch (err) {
-      console.error("Erro ao cadastrar paciente:", err);
-      setFormError("Erro ao salvar paciente no banco de dados. Verifique os dados inseridos.");
-    } finally {
-      setFormSubmitting(false);
-    }
-  };
-
   const renderSortIcon = (field) => {
     if (sortField !== field) {
       return <ArrowUpDown size={14} className="sort-icon-idle" />;
@@ -282,16 +175,11 @@ export default function Pacientes() {
           </p>
         </div>
 
-        <button
-          className="btn-primary-action"
-          onClick={() => {
-            setFormError("");
-            setModalOpen(true);
-          }}
-        >
+        {/* Botão Novo Paciente direcionando para a nova página /pacientes/novo */}
+        <Link to="/pacientes/novo" className="btn-primary-action">
           <UserPlus size={18} />
           <span>Novo Paciente</span>
-        </button>
+        </Link>
       </div>
 
       {/* Control Bar: Search input & Stats */}
@@ -301,7 +189,7 @@ export default function Pacientes() {
           <input
             type="text"
             className="search-input-field"
-            placeholder="Pesquisar por nome, e-mail ou WhatsApp..."
+            placeholder="Pesquisar por nome, e-mail, WhatsApp ou objetivo..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -333,22 +221,22 @@ export default function Pacientes() {
                     {renderSortIcon("nome")}
                   </div>
                 </th>
+                <th>Objetivo Principal</th>
                 <th onClick={() => handleSort("email")} className="sortable-header">
                   <div className="th-content">
-                    <span>E-mail</span>
+                    <span>Contato</span>
                     {renderSortIcon("email")}
                   </div>
                 </th>
-                <th>Telefone</th>
-                <th onClick={() => handleSort("created_at")} className="sortable-header">
+                <th onClick={() => handleSort("ultima_consulta")} className="sortable-header">
                   <div className="th-content">
-                    <span>Data de cadastro</span>
-                    {renderSortIcon("created_at")}
+                    <span>Última Consulta</span>
+                    {renderSortIcon("ultima_consulta")}
                   </div>
                 </th>
                 <th onClick={() => handleSort("proximo_retorno")} className="sortable-header">
                   <div className="th-content">
-                    <span>Próximo retorno</span>
+                    <span>Próximo Retorno</span>
                     {renderSortIcon("proximo_retorno")}
                   </div>
                 </th>
@@ -369,22 +257,22 @@ export default function Pacientes() {
                 <tr>
                   <td colSpan="6" className="table-empty-cell">
                     <div className="table-empty-box">
-                      <Users size={36} className="empty-icon-muted" />
-                      <h4>Nenhum paciente encontrado</h4>
+                      <Users size={40} className="empty-icon-muted" />
+                      <h4>Nenhum paciente cadastrado ainda</h4>
                       <p>
                         {searchTerm
                           ? "Não encontramos nenhum paciente correspondente à sua busca."
-                          : "Você ainda não possui pacientes cadastrados."}
+                          : "Você ainda não possui pacientes cadastrados no sistema."}
                       </p>
                       {!searchTerm && (
-                        <button
+                        <Link
+                          to="/pacientes/novo"
                           className="btn-primary-action"
                           style={{ marginTop: "1rem" }}
-                          onClick={() => setModalOpen(true)}
                         >
                           <UserPlus size={16} />
                           <span>Cadastrar Primeiro Paciente</span>
-                        </button>
+                        </Link>
                       )}
                     </div>
                   </td>
@@ -392,6 +280,11 @@ export default function Pacientes() {
               ) : (
                 paginatedPacientes.map((paciente) => {
                   const status = getPatientStatus(paciente);
+                  const objetivosList = paciente.objetivos || [];
+                  const objetivoExibicao =
+                    paciente.objetivo_texto ||
+                    (objetivosList.length > 0 ? objetivosList[0] : "Acompanhamento geral");
+
                   return (
                     <tr
                       key={paciente.id}
@@ -414,35 +307,39 @@ export default function Pacientes() {
                         </div>
                       </td>
 
-                      {/* Email */}
-                      <td className="cell-email">
-                        {paciente.email ? (
-                          <div className="cell-flex-item">
-                            <Mail size={14} className="cell-icon" />
-                            <span>{paciente.email}</span>
-                          </div>
-                        ) : (
-                          <span className="cell-muted-text">-</span>
-                        )}
+                      {/* Objetivo */}
+                      <td className="cell-objetivo">
+                        <div className="cell-objetivo-box">
+                          <Target size={14} className="cell-icon-accent" />
+                          <span className="objetivo-pill" title={paciente.objetivo_texto || objetivosList.join(", ")}>
+                            {objetivoExibicao}
+                          </span>
+                        </div>
                       </td>
 
-                      {/* Telefone */}
-                      <td className="cell-phone">
-                        {paciente.whatsapp ? (
-                          <div className="cell-flex-item">
-                            <Phone size={14} className="cell-icon" />
-                            <span>{paciente.whatsapp}</span>
-                          </div>
-                        ) : (
-                          <span className="cell-muted-text">-</span>
-                        )}
+                      {/* Contato (Email / WhatsApp) */}
+                      <td className="cell-contact">
+                        <div className="contact-column-stack">
+                          {paciente.email && (
+                            <div className="cell-flex-item">
+                              <Mail size={13} className="cell-icon" />
+                              <span className="cell-text-sm">{paciente.email}</span>
+                            </div>
+                          )}
+                          {paciente.whatsapp && (
+                            <div className="cell-flex-item">
+                              <Phone size={13} className="cell-icon" />
+                              <span className="cell-text-sm">{paciente.whatsapp}</span>
+                            </div>
+                          )}
+                        </div>
                       </td>
 
-                      {/* Data de cadastro */}
+                      {/* Data da Última Consulta */}
                       <td className="cell-date">
                         <div className="cell-flex-item">
                           <Calendar size={14} className="cell-icon" />
-                          <span>{formatDate(paciente.created_at)}</span>
+                          <span>{formatDate(paciente.ultima_consulta)}</span>
                         </div>
                       </td>
 
@@ -535,329 +432,6 @@ export default function Pacientes() {
           </div>
         )}
       </div>
-
-      {/* Modal Redesenhado e Refinado de Cadastro de Novo Paciente */}
-      {modalOpen && (
-        <div className="modal-backdrop" onClick={() => setModalOpen(false)}>
-          <div
-            className="modal-content-card modal-refined-card animate-fade-in"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="modal-header">
-              <div className="modal-header-title">
-                <div className="modal-icon-badge">
-                  <UserPlus size={22} />
-                </div>
-                <div>
-                  <h3>Cadastrar Novo Paciente</h3>
-                  <p>Preencha a ficha clínica e dados cadastrais</p>
-                </div>
-              </div>
-              <button
-                className="modal-close-btn"
-                onClick={() => setModalOpen(false)}
-                aria-label="Fechar modal"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            {formError && (
-              <div className="error-message" style={{ margin: "1.25rem 1.75rem 0" }}>
-                <AlertCircle size={18} />
-                <span>{formError}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleCreatePatient} className="modal-form-body">
-              {/* Seção 1: Identificação & Contato */}
-              <div className="form-section-block">
-                <div className="form-section-header">
-                  <div className="form-section-icon">
-                    <User size={15} />
-                  </div>
-                  <span className="form-section-title">Dados Pessoais & Contato</span>
-                </div>
-
-                <div className="form-grid-2">
-                  <div className="form-group-field">
-                    <label htmlFor="modal_nome" className="form-label">
-                      Nome Completo <span className="required-star">*</span>
-                    </label>
-                    <div className="input-with-icon">
-                      <User size={17} className="input-icon-left" />
-                      <input
-                        type="text"
-                        id="modal_nome"
-                        className="styled-input-field"
-                        required
-                        placeholder="Ex: Dra. Mariana Assis"
-                        value={newPatient.nome}
-                        onChange={(e) =>
-                          setNewPatient({ ...newPatient, nome: e.target.value })
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  <div className="form-group-field">
-                    <label htmlFor="modal_email" className="form-label">
-                      E-mail
-                    </label>
-                    <div className="input-with-icon">
-                      <Mail size={17} className="input-icon-left" />
-                      <input
-                        type="email"
-                        id="modal_email"
-                        className="styled-input-field"
-                        placeholder="paciente@exemplo.com"
-                        value={newPatient.email}
-                        onChange={(e) =>
-                          setNewPatient({ ...newPatient, email: e.target.value })
-                        }
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="form-grid-3">
-                  <div className="form-group-field">
-                    <label htmlFor="modal_whatsapp" className="form-label">
-                      WhatsApp / Telefone
-                    </label>
-                    <div className="input-with-icon">
-                      <Phone size={17} className="input-icon-left" />
-                      <input
-                        type="text"
-                        id="modal_whatsapp"
-                        className="styled-input-field"
-                        placeholder="(11) 99999-9999"
-                        value={newPatient.whatsapp}
-                        onChange={(e) =>
-                          setNewPatient({ ...newPatient, whatsapp: e.target.value })
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  <div className="form-group-field">
-                    <label htmlFor="modal_sexo" className="form-label">
-                      Sexo Biológico
-                    </label>
-                    <div className="select-wrapper">
-                      <select
-                        id="modal_sexo"
-                        className="styled-select-field"
-                        value={newPatient.sexo}
-                        onChange={(e) =>
-                          setNewPatient({ ...newPatient, sexo: e.target.value })
-                        }
-                      >
-                        <option value="Feminino">Feminino</option>
-                        <option value="Masculino">Masculino</option>
-                        <option value="Outro">Outro</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="form-group-field">
-                    <label htmlFor="modal_nascimento" className="form-label">
-                      Data de Nascimento
-                    </label>
-                    <div className="input-with-icon">
-                      <Calendar size={17} className="input-icon-left" />
-                      <input
-                        type="date"
-                        id="modal_nascimento"
-                        className="styled-input-field"
-                        value={newPatient.data_nascimento}
-                        onChange={(e) =>
-                          setNewPatient({
-                            ...newPatient,
-                            data_nascimento: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Seção 2: Antropometria Inicial & IMC */}
-              <div className="form-section-block">
-                <div className="form-section-header">
-                  <div className="form-section-icon">
-                    <Scale size={15} />
-                  </div>
-                  <span className="form-section-title">Medidas & Antropometria Inicial</span>
-                </div>
-
-                <div className="form-grid-2">
-                  <div className="form-group-field">
-                    <label htmlFor="modal_peso" className="form-label">
-                      Peso Inicial (kg)
-                    </label>
-                    <div className="input-with-icon">
-                      <Scale size={17} className="input-icon-left" />
-                      <input
-                        type="number"
-                        step="0.1"
-                        id="modal_peso"
-                        className="styled-input-field"
-                        placeholder="Ex: 68.5"
-                        value={newPatient.peso_inicial}
-                        onChange={(e) =>
-                          setNewPatient({
-                            ...newPatient,
-                            peso_inicial: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  <div className="form-group-field">
-                    <label htmlFor="modal_altura" className="form-label">
-                      Altura (cm)
-                    </label>
-                    <div className="input-with-icon">
-                      <Ruler size={17} className="input-icon-left" />
-                      <input
-                        type="number"
-                        step="0.1"
-                        id="modal_altura"
-                        className="styled-input-field"
-                        placeholder="Ex: 170"
-                        value={newPatient.altura}
-                        onChange={(e) =>
-                          setNewPatient({ ...newPatient, altura: e.target.value })
-                        }
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* IMC Feedback Banner */}
-                {calculatedImc && (
-                  <div className="imc-calc-banner animate-fade-in">
-                    <div className="imc-calc-badge" style={{ backgroundColor: `${calculatedImc.cor}20`, color: calculatedImc.cor, borderColor: calculatedImc.cor }}>
-                      <Activity size={16} />
-                      <span>IMC Calculado: <strong>{calculatedImc.valor} kg/m²</strong> ({calculatedImc.classificacao})</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Seção 3: Objetivos e Observações */}
-              <div className="form-section-block">
-                <div className="form-section-header">
-                  <div className="form-section-icon">
-                    <Target size={15} />
-                  </div>
-                  <span className="form-section-title">Objetivos & Anotações Clínicas</span>
-                </div>
-
-                <div className="form-group-field">
-                  <label htmlFor="modal_objetivo" className="form-label">
-                    Objetivo Principal do Paciente
-                  </label>
-                  <div className="input-with-icon">
-                    <Target size={17} className="input-icon-left" />
-                    <input
-                      type="text"
-                      id="modal_objetivo"
-                      className="styled-input-field"
-                      placeholder="Ex: Emagrecimento saudável, disposição e sono regular"
-                      value={newPatient.objetivo_texto}
-                      onChange={(e) =>
-                        setNewPatient({
-                          ...newPatient,
-                          objetivo_texto: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-
-                  {/* Sugestões rápidas de objetivos */}
-                  <div className="quick-tags-container">
-                    <span className="quick-tags-title">Sugestões:</span>
-                    <div className="quick-tags-list">
-                      {quickObjectives.map((tag) => (
-                        <button
-                          key={tag}
-                          type="button"
-                          className="quick-tag-chip"
-                          onClick={() =>
-                            setNewPatient((prev) => ({
-                              ...prev,
-                              objetivo_texto: prev.objetivo_texto
-                                ? `${prev.objetivo_texto}, ${tag}`
-                                : tag
-                            }))
-                          }
-                        >
-                          + {tag}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="form-group-field">
-                  <label htmlFor="modal_observacoes" className="form-label">
-                    Observações & Histórico Clínico
-                  </label>
-                  <div className="textarea-wrapper">
-                    <textarea
-                      id="modal_observacoes"
-                      rows="3"
-                      className="styled-textarea-field"
-                      placeholder="Anotações gerais sobre rotina alimentar, preferências, alergias conhecidas ou medicamentos em uso..."
-                      value={newPatient.observacoes}
-                      onChange={(e) =>
-                        setNewPatient({
-                          ...newPatient,
-                          observacoes: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Modal Footer Actions */}
-              <div className="modal-footer-actions">
-                <button
-                  type="button"
-                  className="btn-cancel-modal"
-                  onClick={() => setModalOpen(false)}
-                  disabled={formSubmitting}
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="btn-submit-modal"
-                  disabled={formSubmitting}
-                >
-                  {formSubmitting ? (
-                    <>
-                      <div className="spinner-sm" />
-                      <span>Cadastrando...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 size={18} />
-                      <span>Salvar Paciente</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

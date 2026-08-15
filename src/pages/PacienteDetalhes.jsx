@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate, Link, useOutletContext } from "react-router-dom";
 import {
   ArrowLeft,
@@ -14,7 +14,17 @@ import {
   AlertCircle,
   X,
   CheckCircle2,
-  Mail
+  Mail,
+  Activity,
+  Droplets,
+  Utensils,
+  Sun,
+  Moon,
+  Dumbbell,
+  ShieldAlert,
+  Apple,
+  Pill,
+  Target
 } from "lucide-react";
 import { sql } from "../db";
 
@@ -90,6 +100,36 @@ export default function PacienteDetalhes() {
       timeZone: "UTC"
     });
   };
+
+  // Idade calculada
+  const idadeCalculada = useMemo(() => {
+    if (!paciente?.data_nascimento) return null;
+    const nascimento = new Date(paciente.data_nascimento);
+    const hoje = new Date();
+    let idade = hoje.getFullYear() - nascimento.getFullYear();
+    const m = hoje.getMonth() - nascimento.getMonth();
+    if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) {
+      idade--;
+    }
+    return idade > 0 ? `${idade} anos` : "Menos de 1 ano";
+  }, [paciente?.data_nascimento]);
+
+  // IMC Inicial calculado
+  const imcInicial = useMemo(() => {
+    const peso = parseFloat(paciente?.peso_inicial);
+    const alturaCm = parseFloat(paciente?.altura);
+    if (!peso || !alturaCm || alturaCm <= 0) return null;
+    const alturaM = alturaCm / 100;
+    const imc = peso / (alturaM * alturaM);
+    let classificacao = "Eutrofia";
+    if (imc < 18.5) classificacao = "Baixo Peso";
+    else if (imc >= 25 && imc < 30) classificacao = "Sobrepeso";
+    else if (imc >= 30) classificacao = "Obesidade";
+    return {
+      valor: imc.toFixed(1),
+      classificacao
+    };
+  }, [paciente?.peso_inicial, paciente?.altura]);
 
   const handleCreateConsulta = async (e) => {
     e.preventDefault();
@@ -169,13 +209,18 @@ export default function PacienteDetalhes() {
     );
   }
 
+  const objetivosList = paciente.objetivos || [];
+  const patologiasList = paciente.patologias || [];
+  const restricoesList = paciente.restricoes_alimentares || [];
+  const alergiasList = paciente.alergias || [];
+
   return (
-    <div className="paciente-detalhes-container">
+    <div className="paciente-detalhes-container animate-fade-in">
       {/* Top Breadcrumb & Actions */}
       <div className="detalhes-topbar">
         <button className="btn-back-link" onClick={() => navigate("/pacientes")}>
           <ArrowLeft size={18} />
-          <span>Voltar para Pacientes</span>
+          <span>Voltar para Lista de Pacientes</span>
         </button>
 
         <button
@@ -236,8 +281,10 @@ export default function PacienteDetalhes() {
             <strong className="quick-stat-value">{paciente.sexo || "Não informado"}</strong>
           </div>
           <div className="quick-stat-item">
-            <span className="quick-stat-label">Nascimento</span>
-            <strong className="quick-stat-value">{formatDate(paciente.data_nascimento)}</strong>
+            <span className="quick-stat-label">Idade / Nascimento</span>
+            <strong className="quick-stat-value">
+              {idadeCalculada ? `${idadeCalculada} (${formatDate(paciente.data_nascimento)})` : formatDate(paciente.data_nascimento)}
+            </strong>
           </div>
           <div className="quick-stat-item">
             <span className="quick-stat-label">Peso Inicial</span>
@@ -252,6 +299,12 @@ export default function PacienteDetalhes() {
             </strong>
           </div>
           <div className="quick-stat-item">
+            <span className="quick-stat-label">IMC Inicial</span>
+            <strong className="quick-stat-value">
+              {imcInicial ? `${imcInicial.valor} (${imcInicial.classificacao})` : "-"}
+            </strong>
+          </div>
+          <div className="quick-stat-item">
             <span className="quick-stat-label">Total de Consultas</span>
             <strong className="quick-stat-value">{consultas.length}</strong>
           </div>
@@ -260,33 +313,179 @@ export default function PacienteDetalhes() {
 
       {/* Main 2-Column Content */}
       <div className="profile-grid-layout">
-        {/* Left Column: Clinical Info & Goals */}
+        {/* Left Column: Clinical Info, Goals & Habits */}
         <div className="profile-col-left">
-          {/* Objetivo Principal */}
+          {/* Objetivos Nutricionais */}
           <div className="profile-card">
             <div className="profile-card-title">
-              <Sparkles size={18} color="var(--primary)" />
-              <h3>Objetivo Nutricional</h3>
+              <Target size={18} color="var(--primary)" />
+              <h3>Objetivos do Paciente</h3>
             </div>
             <div className="profile-card-content">
-              <p className="goal-highlight-text">
-                {paciente.objetivo_texto || "Nenhum objetivo específico registrado ainda."}
-              </p>
+              {objetivosList.length > 0 && (
+                <div className="profile-chips-wrap" style={{ marginBottom: "0.75rem" }}>
+                  {objetivosList.map((obj) => (
+                    <span key={obj} className="profile-chip-item">
+                      <Sparkles size={13} /> {obj}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {paciente.objetivo_texto && (
+                <p className="goal-highlight-text">{paciente.objetivo_texto}</p>
+              )}
+              {objetivosList.length === 0 && !paciente.objetivo_texto && (
+                <p className="cell-muted-text">Nenhum objetivo registrado.</p>
+              )}
+            </div>
+          </div>
+
+          {/* Saúde, Restrições e Alergias */}
+          <div className="profile-card">
+            <div className="profile-card-title">
+              <HeartPulse size={18} color="var(--primary)" />
+              <h3>Saúde & Restrições</h3>
+            </div>
+            <div className="profile-card-content profile-details-stack">
+              {/* Patologias */}
+              <div className="profile-sub-section">
+                <span className="profile-sub-title">Patologias / Condições:</span>
+                {patologiasList.length > 0 ? (
+                  <div className="profile-chips-wrap">
+                    {patologiasList.map((p) => (
+                      <span key={p} className="profile-chip-item warning">
+                        <HeartPulse size={12} /> {p}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="cell-muted-text">Nenhuma registrada</span>
+                )}
+              </div>
+
+              {/* Restrições */}
+              <div className="profile-sub-section">
+                <span className="profile-sub-title">Restrições Alimentares:</span>
+                {restricoesList.length > 0 ? (
+                  <div className="profile-chips-wrap">
+                    {restricoesList.map((r) => (
+                      <span key={r} className="profile-chip-item info">
+                        <Apple size={12} /> {r}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="cell-muted-text">Nenhuma</span>
+                )}
+              </div>
+
+              {/* Alergias */}
+              <div className="profile-sub-section">
+                <span className="profile-sub-title">Alergias Alimentares:</span>
+                {alergiasList.length > 0 ? (
+                  <div className="profile-chips-wrap">
+                    {alergiasList.map((a) => (
+                      <span key={a} className="profile-chip-item danger">
+                        <ShieldAlert size={12} /> {a}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="cell-muted-text">Nenhuma</span>
+                )}
+              </div>
+
+              {/* Medicamentos e Suplementos */}
+              {(paciente.medicamentos || paciente.suplementos) && (
+                <div className="profile-meds-box">
+                  {paciente.medicamentos && (
+                    <div className="med-row">
+                      <Pill size={14} />
+                      <div>
+                        <strong>Medicamentos:</strong> <span>{paciente.medicamentos}</span>
+                      </div>
+                    </div>
+                  )}
+                  {paciente.suplementos && (
+                    <div className="med-row">
+                      <Sparkles size={14} />
+                      <div>
+                        <strong>Suplementos:</strong> <span>{paciente.suplementos}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Hábitos de Vida & Rotina */}
+          <div className="profile-card">
+            <div className="profile-card-title">
+              <Activity size={18} color="var(--primary)" />
+              <h3>Hábitos & Rotina Diária</h3>
+            </div>
+            <div className="profile-card-content habits-grid">
+              <div className="habit-item">
+                <Utensils size={16} />
+                <div>
+                  <span className="habit-label">Refeições/dia</span>
+                  <strong>{paciente.refeicoes_por_dia || "-"} refeições</strong>
+                </div>
+              </div>
+
+              <div className="habit-item">
+                <Droplets size={16} />
+                <div>
+                  <span className="habit-label">Água</span>
+                  <strong>{paciente.litros_agua ? `${paciente.litros_agua} L/dia` : "-"}</strong>
+                </div>
+              </div>
+
+              <div className="habit-item">
+                <Sun size={16} />
+                <div>
+                  <span className="habit-label">Acorda</span>
+                  <strong>{paciente.horario_acorda || "-"}</strong>
+                </div>
+              </div>
+
+              <div className="habit-item">
+                <Moon size={16} />
+                <div>
+                  <span className="habit-label">Dorme</span>
+                  <strong>{paciente.horario_dorme || "-"}</strong>
+                </div>
+              </div>
+
+              <div className="habit-item span-2">
+                <Dumbbell size={16} />
+                <div>
+                  <span className="habit-label">Atividade Física</span>
+                  <strong>
+                    {paciente.atividade_fisica
+                      ? `Sim — ${paciente.atividade_fisica_descricao || "Pratica regularmente"}`
+                      : "Não pratica atividade física regular"}
+                  </strong>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Observações & Anamnese */}
-          <div className="profile-card">
-            <div className="profile-card-title">
-              <FileText size={18} color="var(--primary)" />
-              <h3>Observações Clínicas</h3>
+          {paciente.observacoes && (
+            <div className="profile-card">
+              <div className="profile-card-title">
+                <FileText size={18} color="var(--primary)" />
+                <h3>Observações Clínicas Gerais</h3>
+              </div>
+              <div className="profile-card-content">
+                <p style={{ color: "var(--text-muted)", fontSize: "0.92rem", lineHeight: 1.6 }}>
+                  {paciente.observacoes}
+                </p>
+              </div>
             </div>
-            <div className="profile-card-content">
-              <p style={{ color: "var(--text-muted)", fontSize: "0.95rem", lineHeight: 1.6 }}>
-                {paciente.observacoes || "Nenhuma observação registrada."}
-              </p>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Right Column: Consultas History */}
@@ -302,14 +501,14 @@ export default function PacienteDetalhes() {
                 onClick={() => setModalConsultaOpen(true)}
               >
                 <Plus size={15} />
-                <span>Adicionar</span>
+                <span>Nova Consulta</span>
               </button>
             </div>
 
             <div className="consultas-timeline-container">
               {consultas.length === 0 ? (
-                <div className="empty-state-box" style={{ padding: "2rem" }}>
-                  <Calendar size={32} className="empty-icon-muted" />
+                <div className="empty-state-box" style={{ padding: "2.5rem 1.5rem" }}>
+                  <Calendar size={36} className="empty-icon-muted" />
                   <h4>Nenhuma consulta registrada</h4>
                   <p>Cadastre a primeira consulta do paciente para acompanhar sua evolução.</p>
                   <button
@@ -371,7 +570,7 @@ export default function PacienteDetalhes() {
 
                         {c.observacoes && (
                           <div className="consulta-obs-box">
-                            <strong>Evolução / Anotações:</strong>
+                            <strong>Evolução / Anotações da Consulta:</strong>
                             <p>{c.observacoes}</p>
                           </div>
                         )}
@@ -385,7 +584,7 @@ export default function PacienteDetalhes() {
         </div>
       </div>
 
-      {/* Modal Registrar Nova Consulta Refinado */}
+      {/* Modal Registrar Nova Consulta */}
       {modalConsultaOpen && (
         <div className="modal-backdrop" onClick={() => setModalConsultaOpen(false)}>
           <div
@@ -399,7 +598,7 @@ export default function PacienteDetalhes() {
                 </div>
                 <div>
                   <h3>Registrar Nova Consulta</h3>
-                  <p>Adicione dados da consulta para {paciente.nome}</p>
+                  <p>Adicione dados e evolução clínica para {paciente.nome}</p>
                 </div>
               </div>
               <button
@@ -619,7 +818,7 @@ export default function PacienteDetalhes() {
                   {submittingConsulta ? (
                     <>
                       <div className="spinner-sm" />
-                      <span>Salvando...</span>
+                      <span>Salvando Consulta...</span>
                     </>
                   ) : (
                     <>
