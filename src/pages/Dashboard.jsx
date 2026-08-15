@@ -1,226 +1,311 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { LogOut, Users, Calendar, Utensils, UserCheck, Database, CheckCircle2 } from "lucide-react";
-import { authClient } from "../auth";
+import React, { useEffect, useState } from "react";
+import { Link, useOutletContext } from "react-router-dom";
+import {
+  Users,
+  Calendar,
+  ClockAlert,
+  ChevronRight,
+  UserPlus,
+  RefreshCw,
+  Sparkles,
+  ArrowUpRight,
+  CalendarDays,
+  Phone,
+  Mail,
+  CheckCircle2,
+  AlertTriangle
+} from "lucide-react";
 import { sql } from "../db";
-import Logo from "../components/Logo";
-import ThemeToggle from "../components/ThemeToggle";
 
 export default function Dashboard() {
-  const navigate = useNavigate();
-  const [user, setUser] = useState(null);
-  const [stats, setStats] = useState({ pacientes: 0, consultas: 0, planos: 0 });
-  const [dbConnected, setDbConnected] = useState(false);
+  const { user } = useOutletContext() || {};
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [stats, setStats] = useState({
+    totalPacientes: 0,
+    consultasSemana: 0,
+    pacientesSemRetorno: [],
+  });
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const { data: session } = await authClient.getSession();
-        if (session && session.user) {
-          setUser(session.user);
-        }
-      } catch (err) {
-        console.error("Erro ao carregar usuário", err);
-      }
-    };
-    fetchUser();
-  }, []);
+  const fetchDashboardData = async (isManualRefresh = false) => {
+    if (!user?.id) return;
+    if (isManualRefresh) setRefreshing(true);
+    else setLoading(true);
+    setError(null);
 
-  useEffect(() => {
-    const fetchDbStats = async () => {
-      try {
-        const [pacientesRes, consultasRes, planosRes] = await Promise.all([
-          sql`SELECT COUNT(*) FROM pacientes`,
-          sql`SELECT COUNT(*) FROM consultas`,
-          sql`SELECT COUNT(*) FROM planos_alimentares`
-        ]);
-        setStats({
-          pacientes: parseInt(pacientesRes[0]?.count || 0, 10),
-          consultas: parseInt(consultasRes[0]?.count || 0, 10),
-          planos: parseInt(planosRes[0]?.count || 0, 10)
-        });
-        setDbConnected(true);
-      } catch (err) {
-        console.error("Erro ao conectar ou consultar Neon Database", err);
-      }
-    };
-    fetchDbStats();
-  }, []);
-
-
-  const handleLogout = async () => {
     try {
-      await authClient.signOut();
-      navigate("/login", { replace: true });
-    } catch (error) {
-      console.error("Erro ao fazer logout", error);
+      // 1. Total de pacientes cadastrados pela nutricionista logada
+      const totalPacientesRes = await sql`
+        SELECT COUNT(*)::int AS count 
+        FROM pacientes 
+        WHERE nutricionista_id = ${user.id}
+      `;
+      const totalPacientes = totalPacientesRes[0]?.count || 0;
+
+      // 2. Consultas da semana atual da nutricionista logada
+      // Semana de segunda a domingo pelo date_trunc('week', CURRENT_DATE)
+      const consultasSemanaRes = await sql`
+        SELECT COUNT(*)::int AS count 
+        FROM consultas c
+        JOIN pacientes p ON c.paciente_id = p.id
+        WHERE p.nutricionista_id = ${user.id}
+          AND c.data_consulta >= date_trunc('week', CURRENT_DATE)
+          AND c.data_consulta <= (date_trunc('week', CURRENT_DATE) + INTERVAL '6 days 23 hours 59 minutes 59 seconds')
+      `;
+      const consultasSemana = consultasSemanaRes[0]?.count || 0;
+
+      // 3. Pacientes sem retorno: última consulta há mais de 30 dias e sem próximo retorno agendado (ou retorno já passado)
+      // Também considera pacientes cadastrados há mais de 30 dias que nunca tiveram consulta registrada
+      const pacientesSemRetornoRes = await sql`
+        SELECT 
+          p.id, 
+          p.nome, 
+          p.email, 
+          p.whatsapp,
+          p.created_at,
+          MAX(c.data_consulta) AS ultima_consulta,
+          MAX(c.proximo_retorno) AS proximo_retorno,
+          CURRENT_DATE - COALESCE(MAX(c.data_consulta), p.created_at::date) AS dias_sem_consulta
+        FROM pacientes p
+        LEFT JOIN consultas c ON p.id = c.paciente_id
+        WHERE p.nutricionista_id = ${user.id}
+        GROUP BY p.id, p.nome, p.email, p.whatsapp, p.created_at
+        HAVING 
+          (MAX(c.data_consulta) IS NOT NULL AND MAX(c.data_consulta) < CURRENT_DATE - INTERVAL '30 days' AND (MAX(c.proximo_retorno) IS NULL OR MAX(c.proximo_retorno) < CURRENT_DATE))
+          OR (MAX(c.data_consulta) IS NULL AND p.created_at::date < CURRENT_DATE - INTERVAL '30 days')
+        ORDER BY dias_sem_consulta DESC
+        LIMIT 15
+      `;
+
+      setStats({
+        totalPacientes,
+        consultasSemana,
+        pacientesSemRetorno: pacientesSemRetornoRes || [],
+      });
+    } catch (err) {
+      console.error("Erro ao carregar métricas do dashboard:", err);
+      setError("Não foi possível carregar os dados em tempo real do banco de dados.");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
   };
 
+  useEffect(() => {
+    if (user?.id) {
+      fetchDashboardData();
+    }
+  }, [user?.id]);
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "Sem registro";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("pt-BR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      timeZone: "UTC",
+    });
+  };
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Bom dia";
+    if (hour < 18) return "Boa tarde";
+    return "Boa noite";
+  };
+
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "var(--bg-main)", color: "var(--text-main)", transition: "background-color 0.3s ease, color 0.3s ease" }}>
-      {/* Top Navbar */}
-      <header style={{
-        backgroundColor: "var(--surface)",
-        borderBottom: "1px solid var(--border)",
-        padding: "0.75rem 2rem",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        boxShadow: "var(--shadow-card)",
-        transition: "background-color 0.3s ease, border-color 0.3s ease"
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <Logo size="sm" />
+    <div className="dashboard-container">
+      {/* Top Header / Welcome */}
+      <div className="dashboard-header">
+        <div className="dashboard-header-left">
+          <div className="greeting-badge">
+            <Sparkles size={15} />
+            <span>Painel LopesNutri</span>
+          </div>
+          <h1 className="dashboard-title">
+            {getGreeting()}, {user?.name ? user.name.split(" ")[0] : "Nutricionista"}! 👋
+          </h1>
+          <p className="dashboard-subtitle">
+            Acompanhe o desempenho do seu consultório e o acompanhamento dos seus pacientes.
+          </p>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          {user && (
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.9rem", color: "var(--text-muted)" }}>
-              <UserCheck size={18} color="var(--primary)" />
-              <span>Olá, <strong style={{ color: "var(--text-main)" }}>{user.name || user.email}</strong></span>
-            </div>
-          )}
-
-          <ThemeToggle />
-
-          <button 
-            onClick={handleLogout}
-            style={{ 
-              display: "flex", 
-              alignItems: "center", 
-              gap: "0.5rem",
-              padding: "0.5rem 1rem",
-              backgroundColor: "transparent",
-              border: "1.5px solid var(--border)",
-              borderRadius: "var(--radius-md)",
-              cursor: "pointer",
-              color: "var(--text-muted)",
-              fontWeight: "600",
-              fontSize: "0.875rem",
-              transition: "all 0.2s"
-            }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.borderColor = "var(--error)";
-              e.currentTarget.style.color = "var(--error)";
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.borderColor = "var(--border)";
-              e.currentTarget.style.color = "var(--text-muted)";
-            }}
+        <div className="dashboard-header-actions">
+          <button
+            className="btn-refresh"
+            onClick={() => fetchDashboardData(true)}
+            disabled={loading || refreshing}
+            title="Atualizar dados em tempo real"
           >
-            <LogOut size={16} />
-            Sair
+            <RefreshCw size={16} className={refreshing ? "spin-animation" : ""} />
+            <span>{refreshing ? "Atualizando..." : "Atualizar"}</span>
           </button>
-        </div>
-      </header>
 
-      {/* Main Content */}
-      <main style={{ maxWidth: "1100px", margin: "2.5rem auto", padding: "0 1.5rem" }}>
-        {/* Welcome Banner */}
-        <div style={{
-          background: "linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)",
-          color: "white",
-          padding: "2.5rem 2rem",
-          borderRadius: "var(--radius-lg)",
-          boxShadow: "var(--shadow-card)",
-          marginBottom: "2rem",
-          position: "relative",
-          overflow: "hidden"
-        }}>
-          <div style={{ position: "relative", zIndex: 1 }}>
-            <h1 style={{ fontSize: "1.75rem", fontWeight: "800", marginBottom: "0.5rem" }}>
-              Painel de Gestão Nutricional
-            </h1>
-            <p style={{ opacity: 0.9, fontSize: "1rem", maxWidth: "600px" }}>
-              Bem-vindo ao LopesNutri! Seu ambiente completo para gerenciar pacientes, planos alimentares e acompanhamento nutricional com precisão e eficiência.
+          <Link to="/pacientes" className="btn-primary-action">
+            <UserPlus size={18} />
+            <span>Gerenciar Pacientes</span>
+          </Link>
+        </div>
+      </div>
+
+      {error && (
+        <div className="error-alert-card">
+          <AlertTriangle size={20} />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Grid of Main 3 Cards as specified in Prompt 3 */}
+      <div className="dashboard-main-grid">
+        {/* Card 1: Total de pacientes ativos */}
+        <div className="stat-card stat-card-primary">
+          <div className="stat-card-top">
+            <div className="stat-icon-wrapper icon-users">
+              <Users size={24} />
+            </div>
+            <span className="stat-badge">Total Ativos</span>
+          </div>
+
+          <div className="stat-card-body">
+            <div className="stat-value-group">
+              <h2 className="stat-number">
+                {loading ? <span className="skeleton-loader" /> : stats.totalPacientes}
+              </h2>
+              <span className="stat-unit">pacientes</span>
+            </div>
+            <p className="stat-description">
+              Total de pacientes vinculados ao seu cadastro
             </p>
           </div>
-        </div>
 
-        {/* Quick Stats Grid Preview */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1.5rem" }}>
-          <div style={{
-            backgroundColor: "var(--surface)",
-            padding: "1.5rem",
-            borderRadius: "var(--radius-md)",
-            border: "1px solid var(--border)",
-            boxShadow: "var(--shadow-card)",
-            transition: "background-color 0.3s ease, border-color 0.3s ease"
-          }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
-              <span style={{ fontSize: "0.875rem", fontWeight: "600", color: "var(--text-muted)" }}>Pacientes</span>
-              <div style={{ width: "38px", height: "38px", borderRadius: "50%", backgroundColor: "var(--primary-light)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Users size={20} color="var(--primary)" />
-              </div>
-            </div>
-            <h3 style={{ fontSize: "1.5rem", fontWeight: "700" }}>{stats.pacientes}</h3>
-            <p style={{ fontSize: "0.8rem", color: "var(--text-light)", marginTop: "0.25rem" }}>Pacientes cadastrados no banco</p>
-          </div>
-
-          <div style={{
-            backgroundColor: "var(--surface)",
-            padding: "1.5rem",
-            borderRadius: "var(--radius-md)",
-            border: "1px solid var(--border)",
-            boxShadow: "var(--shadow-card)",
-            transition: "background-color 0.3s ease, border-color 0.3s ease"
-          }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
-              <span style={{ fontSize: "0.875rem", fontWeight: "600", color: "var(--text-muted)" }}>Consultas Hoje</span>
-              <div style={{ width: "38px", height: "38px", borderRadius: "50%", backgroundColor: "var(--primary-light)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Calendar size={20} color="var(--primary)" />
-              </div>
-            </div>
-            <h3 style={{ fontSize: "1.5rem", fontWeight: "700" }}>{stats.consultas}</h3>
-            <p style={{ fontSize: "0.8rem", color: "var(--text-light)", marginTop: "0.25rem" }}>Consultas agendadas</p>
-          </div>
-
-          <div style={{
-            backgroundColor: "var(--surface)",
-            padding: "1.5rem",
-            borderRadius: "var(--radius-md)",
-            border: "1px solid var(--border)",
-            boxShadow: "var(--shadow-card)",
-            transition: "background-color 0.3s ease, border-color 0.3s ease"
-          }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
-              <span style={{ fontSize: "0.875rem", fontWeight: "600", color: "var(--text-muted)" }}>Planos Alimentares</span>
-              <div style={{ width: "38px", height: "38px", borderRadius: "50%", backgroundColor: "var(--primary-light)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Utensils size={20} color="var(--primary)" />
-              </div>
-            </div>
-            <h3 style={{ fontSize: "1.5rem", fontWeight: "700" }}>{stats.planos}</h3>
-            <p style={{ fontSize: "0.8rem", color: "var(--text-light)", marginTop: "0.25rem" }}>Planos cadastrados no sistema</p>
+          <div className="stat-card-footer">
+            <Link to="/pacientes" className="stat-footer-link">
+              <span>Ver todos os pacientes</span>
+              <ArrowUpRight size={16} />
+            </Link>
           </div>
         </div>
 
-        {/* Database Status Indicator */}
-        <div style={{
-          marginTop: "2rem",
-          padding: "1rem 1.5rem",
-          backgroundColor: "var(--surface)",
-          borderRadius: "var(--radius-md)",
-          border: "1px solid var(--border)",
-          display: "flex",
-          alignItems: "center",
-          gap: "0.75rem",
-          fontSize: "0.875rem"
-        }}>
-          <Database size={20} color={dbConnected ? "var(--primary)" : "var(--text-light)"} />
-          <span>Status do Banco de Dados (Neon):</span>
-          {dbConnected ? (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", color: "#10b981", fontWeight: "600" }}>
-              <CheckCircle2 size={16} /> Conectado ao Neon Database (AWS sa-east-1)
-            </span>
-          ) : (
-            <span style={{ color: "var(--text-light)", fontStyle: "italic" }}>
-              Conectando ao banco...
-            </span>
-          )}
+        {/* Card 2: Consultas da semana */}
+        <div className="stat-card stat-card-accent">
+          <div className="stat-card-top">
+            <div className="stat-icon-wrapper icon-calendar">
+              <Calendar size={24} />
+            </div>
+            <span className="stat-badge badge-week">Esta Semana</span>
+          </div>
+
+          <div className="stat-card-body">
+            <div className="stat-value-group">
+              <h2 className="stat-number">
+                {loading ? <span className="skeleton-loader" /> : stats.consultasSemana}
+              </h2>
+              <span className="stat-unit">consultas</span>
+            </div>
+            <p className="stat-description">
+              Consultas registradas na semana corrente
+            </p>
+          </div>
+
+          <div className="stat-card-footer">
+            <div className="stat-footer-info">
+              <CalendarDays size={15} />
+              <span>Segunda a Domingo</span>
+            </div>
+          </div>
         </div>
 
-      </main>
+        {/* Card 3: Pacientes sem retorno */}
+        <div className="stat-card stat-card-alert span-full-card">
+          <div className="card-header-flex">
+            <div className="card-header-title-box">
+              <div className="stat-icon-wrapper icon-alert">
+                <ClockAlert size={22} />
+              </div>
+              <div>
+                <h3 className="card-title">Pacientes sem retorno</h3>
+                <p className="card-subtitle">
+                  Pacientes cuja última consulta foi há mais de 30 dias e sem retorno agendado
+                </p>
+              </div>
+            </div>
+
+            <div className="badge-count-warning">
+              {loading ? "..." : `${stats.pacientesSemRetorno.length} sem retorno`}
+            </div>
+          </div>
+
+          <div className="card-content-list-wrapper">
+            {loading ? (
+              <div className="skeleton-list">
+                <div className="skeleton-row" />
+                <div className="skeleton-row" />
+                <div className="skeleton-row" />
+              </div>
+            ) : stats.pacientesSemRetorno.length === 0 ? (
+              <div className="empty-state-box">
+                <div className="empty-icon-circle">
+                  <CheckCircle2 size={32} />
+                </div>
+                <h4 className="empty-title">Nenhum paciente sem retorno no momento</h4>
+                <p className="empty-desc">
+                  Parabéns! Todos os seus pacientes estão com consultas e retornos em dia.
+                </p>
+              </div>
+            ) : (
+              <div className="pacientes-sem-retorno-list">
+                {stats.pacientesSemRetorno.map((paciente) => (
+                  <Link
+                    key={paciente.id}
+                    to={`/pacientes/${paciente.id}`}
+                    className="paciente-sem-retorno-item"
+                    title={`Abrir perfil de ${paciente.nome}`}
+                  >
+                    <div className="paciente-info-col">
+                      <div className="paciente-avatar-sm">
+                        {paciente.nome ? paciente.nome.charAt(0).toUpperCase() : "P"}
+                      </div>
+                      <div className="paciente-text-group">
+                        <strong className="paciente-nome">{paciente.nome}</strong>
+                        <div className="paciente-subdetails">
+                          {paciente.email && (
+                            <span className="paciente-meta-item">
+                              <Mail size={13} /> {paciente.email}
+                            </span>
+                          )}
+                          {paciente.whatsapp && (
+                            <span className="paciente-meta-item">
+                              <Phone size={13} /> {paciente.whatsapp}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="paciente-status-col">
+                      <div className="consulta-timing-tag">
+                        <ClockAlert size={14} />
+                        <span>
+                          {paciente.ultima_consulta
+                            ? `Última consulta: ${formatDate(paciente.ultima_consulta)} (${paciente.dias_sem_consulta} dias)`
+                            : `Cadastrado há ${paciente.dias_sem_consulta} dias (sem consultas)`}
+                        </span>
+                      </div>
+                      <div className="action-hover-btn">
+                        <span>Ver Perfil</span>
+                        <ChevronRight size={16} />
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
