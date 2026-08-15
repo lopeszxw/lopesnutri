@@ -28,6 +28,7 @@ import {
   Edit3
 } from "lucide-react";
 import { sql } from "../db";
+import EvolucaoPesoChart from "../components/EvolucaoPesoChart";
 
 export default function PacienteDetalhes() {
   const { id } = useParams();
@@ -326,6 +327,13 @@ export default function PacienteDetalhes() {
           </div>
         </div>
       </div>
+
+      {/* Gráfico de Evolução do Peso do Paciente (Emagrecimento / Aumento) */}
+      <EvolucaoPesoChart
+        pesoInicial={paciente.peso_inicial}
+        dataCadastro={paciente.created_at}
+        consultas={consultas}
+      />
 
       {/* Main 2-Column Content */}
       <div className="profile-grid-layout">
