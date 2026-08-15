@@ -20,7 +20,7 @@ O dashboard deve exibir 3 cards principais:
 - Cada nome da lista deve ser clicável e redirecionar para o perfil do paciente
 
 ## Regras importantes
-- Todos os dados devem ser carregados do Supabase em tempo real
+- Todos os dados devem ser carregados do Neon em tempo real
 - Exibir apenas dados da nutricionista logada
 - Se não houver pacientes sem retorno, exibir a mensagem "Nenhum paciente sem retorno no momento"
 
@@ -60,7 +60,7 @@ A tabela deve exibir as seguintes colunas:
 ## Regras importantes
 
 - Exibir apenas pacientes da nutricionista logada
-- Buscar todos os dados no Supabase em tempo real
+- Buscar todos os dados no Neon em tempo real
 - A tabela deve ser responsiva e funcionar bem em dispositivos móveis
 
 ## Design
