@@ -12,7 +12,9 @@ import {
   FileText,
   MessageCircle,
   AlertCircle,
-  X
+  X,
+  CheckCircle2,
+  Mail
 } from "lucide-react";
 import { sql } from "../db";
 
@@ -45,7 +47,6 @@ export default function PacienteDetalhes() {
     setLoading(true);
     setError("");
     try {
-      // 1. Buscar paciente garantindo que pertence à nutricionista logada
       const pacienteRes = await sql`
         SELECT * FROM pacientes 
         WHERE id = ${id} AND nutricionista_id = ${user.id}
@@ -59,7 +60,6 @@ export default function PacienteDetalhes() {
 
       setPaciente(pacienteRes[0]);
 
-      // 2. Buscar histórico de consultas do paciente
       const consultasRes = await sql`
         SELECT * FROM consultas 
         WHERE paciente_id = ${id} 
@@ -120,7 +120,7 @@ export default function PacienteDetalhes() {
           ${newConsulta.quadril ? parseFloat(newConsulta.quadril) : null},
           ${newConsulta.percentual_gordura ? parseFloat(newConsulta.percentual_gordura) : null},
           ${newConsulta.proximo_retorno || null},
-          ${newConsulta.observacoes || null}
+          ${newConsulta.observacoes.trim() || null}
         )
       `;
 
@@ -385,17 +385,17 @@ export default function PacienteDetalhes() {
         </div>
       </div>
 
-      {/* Modal Registrar Nova Consulta */}
+      {/* Modal Registrar Nova Consulta Refinado */}
       {modalConsultaOpen && (
         <div className="modal-backdrop" onClick={() => setModalConsultaOpen(false)}>
           <div
-            className="modal-content-card animate-fade-in"
+            className="modal-content-card modal-refined-card animate-fade-in"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="modal-header">
               <div className="modal-header-title">
                 <div className="modal-icon-badge">
-                  <Plus size={20} />
+                  <Plus size={22} />
                 </div>
                 <div>
                   <h3>Registrar Nova Consulta</h3>
@@ -412,137 +412,200 @@ export default function PacienteDetalhes() {
             </div>
 
             {consultaError && (
-              <div className="error-message" style={{ margin: "1rem 1.5rem 0" }}>
+              <div className="error-message" style={{ margin: "1.25rem 1.75rem 0" }}>
                 <AlertCircle size={18} />
                 <span>{consultaError}</span>
               </div>
             )}
 
             <form onSubmit={handleCreateConsulta} className="modal-form-body">
-              <div className="form-grid-2">
-                <div className="input-group">
-                  <label htmlFor="data_consulta">Data da Consulta *</label>
-                  <input
-                    type="date"
-                    id="data_consulta"
-                    className="input-field"
-                    required
-                    value={newConsulta.data_consulta}
-                    onChange={(e) =>
-                      setNewConsulta({
-                        ...newConsulta,
-                        data_consulta: e.target.value,
-                      })
-                    }
-                  />
+              {/* Seção 1: Agendamento & Datas */}
+              <div className="form-section-block">
+                <div className="form-section-header">
+                  <div className="form-section-icon">
+                    <Calendar size={15} />
+                  </div>
+                  <span className="form-section-title">Datas da Consulta</span>
                 </div>
 
-                <div className="input-group">
-                  <label htmlFor="proximo_retorno">Próximo Retorno</label>
-                  <input
-                    type="date"
-                    id="proximo_retorno"
-                    className="input-field"
-                    value={newConsulta.proximo_retorno}
-                    onChange={(e) =>
-                      setNewConsulta({
-                        ...newConsulta,
-                        proximo_retorno: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-              </div>
+                <div className="form-grid-2">
+                  <div className="form-group-field">
+                    <label htmlFor="modal_data_consulta" className="form-label">
+                      Data da Consulta <span className="required-star">*</span>
+                    </label>
+                    <div className="input-with-icon">
+                      <Calendar size={17} className="input-icon-left" />
+                      <input
+                        type="date"
+                        id="modal_data_consulta"
+                        className="styled-input-field"
+                        required
+                        value={newConsulta.data_consulta}
+                        onChange={(e) =>
+                          setNewConsulta({
+                            ...newConsulta,
+                            data_consulta: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
 
-              <div className="form-grid-2">
-                <div className="input-group">
-                  <label htmlFor="peso">Peso Atual (kg)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    id="peso"
-                    className="input-field"
-                    placeholder="Ex: 68.4"
-                    value={newConsulta.peso}
-                    onChange={(e) =>
-                      setNewConsulta({ ...newConsulta, peso: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div className="input-group">
-                  <label htmlFor="percentual_gordura">% Gordura</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    id="percentual_gordura"
-                    className="input-field"
-                    placeholder="Ex: 22.5"
-                    value={newConsulta.percentual_gordura}
-                    onChange={(e) =>
-                      setNewConsulta({
-                        ...newConsulta,
-                        percentual_gordura: e.target.value,
-                      })
-                    }
-                  />
+                  <div className="form-group-field">
+                    <label htmlFor="modal_proximo_retorno" className="form-label">
+                      Data do Próximo Retorno
+                    </label>
+                    <div className="input-with-icon">
+                      <CalendarClock size={17} className="input-icon-left" />
+                      <input
+                        type="date"
+                        id="modal_proximo_retorno"
+                        className="styled-input-field"
+                        value={newConsulta.proximo_retorno}
+                        onChange={(e) =>
+                          setNewConsulta({
+                            ...newConsulta,
+                            proximo_retorno: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="form-grid-2">
-                <div className="input-group">
-                  <label htmlFor="cintura">Circunferência Cintura (cm)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    id="cintura"
-                    className="input-field"
-                    placeholder="Ex: 75"
-                    value={newConsulta.cintura}
-                    onChange={(e) =>
-                      setNewConsulta({ ...newConsulta, cintura: e.target.value })
-                    }
-                  />
+              {/* Seção 2: Medidas & Antropometria */}
+              <div className="form-section-block">
+                <div className="form-section-header">
+                  <div className="form-section-icon">
+                    <Scale size={15} />
+                  </div>
+                  <span className="form-section-title">Métricas Antropométricas</span>
                 </div>
 
-                <div className="input-group">
-                  <label htmlFor="quadril">Circunferência Quadril (cm)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    id="quadril"
-                    className="input-field"
-                    placeholder="Ex: 98"
-                    value={newConsulta.quadril}
-                    onChange={(e) =>
-                      setNewConsulta({ ...newConsulta, quadril: e.target.value })
-                    }
-                  />
+                <div className="form-grid-2">
+                  <div className="form-group-field">
+                    <label htmlFor="modal_peso_c" className="form-label">
+                      Peso Atual (kg)
+                    </label>
+                    <div className="input-with-icon">
+                      <Scale size={17} className="input-icon-left" />
+                      <input
+                        type="number"
+                        step="0.1"
+                        id="modal_peso_c"
+                        className="styled-input-field"
+                        placeholder="Ex: 68.4"
+                        value={newConsulta.peso}
+                        onChange={(e) =>
+                          setNewConsulta({ ...newConsulta, peso: e.target.value })
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group-field">
+                    <label htmlFor="modal_gordura_c" className="form-label">
+                      Percentual de Gordura (%)
+                    </label>
+                    <div className="input-with-icon">
+                      <HeartPulse size={17} className="input-icon-left" />
+                      <input
+                        type="number"
+                        step="0.1"
+                        id="modal_gordura_c"
+                        className="styled-input-field"
+                        placeholder="Ex: 22.5"
+                        value={newConsulta.percentual_gordura}
+                        onChange={(e) =>
+                          setNewConsulta({
+                            ...newConsulta,
+                            percentual_gordura: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-grid-2">
+                  <div className="form-group-field">
+                    <label htmlFor="modal_cintura_c" className="form-label">
+                      Circunferência Cintura (cm)
+                    </label>
+                    <div className="input-with-icon">
+                      <Ruler size={17} className="input-icon-left" />
+                      <input
+                        type="number"
+                        step="0.1"
+                        id="modal_cintura_c"
+                        className="styled-input-field"
+                        placeholder="Ex: 75"
+                        value={newConsulta.cintura}
+                        onChange={(e) =>
+                          setNewConsulta({ ...newConsulta, cintura: e.target.value })
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group-field">
+                    <label htmlFor="modal_quadril_c" className="form-label">
+                      Circunferência Quadril (cm)
+                    </label>
+                    <div className="input-with-icon">
+                      <Ruler size={17} className="input-icon-left" />
+                      <input
+                        type="number"
+                        step="0.1"
+                        id="modal_quadril_c"
+                        className="styled-input-field"
+                        placeholder="Ex: 98"
+                        value={newConsulta.quadril}
+                        onChange={(e) =>
+                          setNewConsulta({ ...newConsulta, quadril: e.target.value })
+                        }
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="input-group">
-                <label htmlFor="obs_consulta">Evolução / Observações da Consulta</label>
-                <textarea
-                  id="obs_consulta"
-                  rows="3"
-                  className="input-field"
-                  style={{ resize: "vertical" }}
-                  placeholder="Relato do paciente, mudanças na dieta, suplementação ajustada..."
-                  value={newConsulta.observacoes}
-                  onChange={(e) =>
-                    setNewConsulta({
-                      ...newConsulta,
-                      observacoes: e.target.value,
-                    })
-                  }
-                />
+              {/* Seção 3: Observações & Evolução */}
+              <div className="form-section-block">
+                <div className="form-section-header">
+                  <div className="form-section-icon">
+                    <FileText size={15} />
+                  </div>
+                  <span className="form-section-title">Evolução & Conduta Nutricional</span>
+                </div>
+
+                <div className="form-group-field">
+                  <label htmlFor="modal_obs_c" className="form-label">
+                    Observações Clínicas / Relato do Paciente
+                  </label>
+                  <div className="textarea-wrapper">
+                    <textarea
+                      id="modal_obs_c"
+                      rows="3"
+                      className="styled-textarea-field"
+                      placeholder="Relato do paciente sobre adesão à dieta, sintomas gastrointestinais, suplementação orientada..."
+                      value={newConsulta.observacoes}
+                      onChange={(e) =>
+                        setNewConsulta({
+                          ...newConsulta,
+                          observacoes: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="modal-footer-actions">
                 <button
                   type="button"
-                  className="btn-secondary-action"
+                  className="btn-cancel-modal"
                   onClick={() => setModalConsultaOpen(false)}
                   disabled={submittingConsulta}
                 >
@@ -550,10 +613,20 @@ export default function PacienteDetalhes() {
                 </button>
                 <button
                   type="submit"
-                  className="btn-primary-action"
+                  className="btn-submit-modal"
                   disabled={submittingConsulta}
                 >
-                  {submittingConsulta ? "Salvando Consulta..." : "Salvar Consulta"}
+                  {submittingConsulta ? (
+                    <>
+                      <div className="spinner-sm" />
+                      <span>Salvando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 size={18} />
+                      <span>Salvar Consulta</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>
