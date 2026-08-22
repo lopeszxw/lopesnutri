@@ -6,10 +6,10 @@ export default function Logo({ size = "md", showSubtitle = true, className = "" 
   const isDark = theme === "dark";
 
   const sizeStyles = {
-    sm: { width: "160px" },
-    md: { width: "210px" },
-    lg: { width: "270px" },
-    xl: { width: "330px" }
+    sm: { width: "135px", maxHeight: "36px" },
+    md: { width: "190px", maxHeight: "48px" },
+    lg: { width: "250px", maxHeight: "60px" },
+    xl: { width: "310px", maxHeight: "72px" }
   };
 
   return (

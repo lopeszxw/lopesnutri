@@ -69,8 +69,31 @@ export const formatNutriGreeting = (rawName) => {
   if (/^dr\.?$/i.test(parts[0]) || /^dra\.?$/i.test(parts[0])) {
     const title = /^dra/i.test(parts[0]) ? "Dra." : "Dr.";
     const firstName = parts[1] || "";
-    return firstName ? `${title} ${firstName}` : "Nutricionista";
+    return firstName ? `${title} ${firstName}`.trim() : "Nutricionista";
   }
 
-  return parts[0] || "Nutricionista";
+  return (parts[0] || "Nutricionista").trim();
+};
+
+/**
+ * Formata números de telefone e WhatsApp no padrão brasileiro (XX) XXXXX-XXXX ou (XX) XXXX-XXXX
+ */
+export const formatPhone = (val) => {
+  if (!val) return "";
+  const cleaned = String(val).replace(/\D/g, "");
+  if (cleaned.length === 11) {
+    return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
+  }
+  if (cleaned.length === 10) {
+    return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 6)}-${cleaned.slice(6)}`;
+  }
+  if (cleaned.length === 13 && cleaned.startsWith("55")) {
+    const withoutDDI = cleaned.slice(2);
+    return `(${withoutDDI.slice(0, 2)}) ${withoutDDI.slice(2, 7)}-${withoutDDI.slice(7)}`;
+  }
+  if (cleaned.length === 12 && cleaned.startsWith("55")) {
+    const withoutDDI = cleaned.slice(2);
+    return `(${withoutDDI.slice(0, 2)}) ${withoutDDI.slice(2, 6)}-${withoutDDI.slice(6)}`;
+  }
+  return val;
 };

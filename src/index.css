@@ -1,50 +1,53 @@
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 
 :root, [data-theme="light"] {
-  /* LopesNutri Color Palette - Editorial & Humanized Clinical (Prompt 5.1) */
-  --primary: #3d5a45;          /* Sage / Olive Green */
-  --primary-hover: #4a6b53;    /* Medium Sage Olive */
-  --primary-dark: #2f4534;     /* Deep Olive Accent */
-  --primary-light: #eef4f0;    /* Soft Linen-Sage Tint */
-  --accent-mint: #5b8266;      /* Soft Sage Green */
+  /* LopesNutri Color Palette - Bento Grid & Editorial (Prompt 5.2) */
+  --font-serif: "Newsreader", "Fraunces", Georgia, serif;
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
 
-  --bg-main: #f9f9f6;          /* Soft warm linen / off-white background */
+  --primary: #2d4336;          /* Deep Forest / Olive Green */
+  --primary-hover: #385443;    /* Medium Forest Olive */
+  --primary-dark: #1e2e25;     /* Darkest Forest Slate */
+  --primary-light: #edf2ee;    /* Soft Linen-Sage Tint */
+  --accent-mint: #4e705b;      /* Muted Sage Accent */
+
+  --bg-main: #f8f7f4;          /* Soft warm linen / paper background */
   --surface: #ffffff;          /* Pure clean card surface */
-  --surface-hover: #fcfcfb;
-  --surface-secondary: #f4f5f1;
+  --surface-hover: #fcfbfa;
+  --surface-secondary: #f3f1ec;
   --surface-glass: rgba(255, 255, 255, 0.96);
 
-  --text-main: #1c2420;        /* Deep natural charcoal text */
-  --text-muted: #57655d;       /* Muted sage charcoal */
-  --text-light: #8a968f;       /* Light stone gray */
+  --text-main: #19211c;        /* Deep natural charcoal text */
+  --text-muted: #536158;       /* Muted forest charcoal */
+  --text-light: #87948c;       /* Light stone gray */
 
-  --border: #e8ece9;           /* Ultra subtle editorial border */
-  --border-light: #f0f3f1;
-  --border-focus: #3d5a45;
+  --border: #e5e2dc;           /* Ultra subtle warm gray editorial border */
+  --border-light: #eeebe6;
+  --border-focus: #2d4336;
   
-  --error: #c05621;            /* Warm Terracotta for clinical alerts */
-  --error-bg: #fdf2ec;
-  --error-border: #f8d7c8;
-  --warning: #b45309;          /* Warm Ochre / Amber */
-  --warning-bg: #fef8eb;
-  --warning-border: #fde8bc;
-  --success: #2f5e42;          /* Sage Success */
+  --error: #b84a1e;            /* Warm Terracotta for clinical alerts */
+  --error-bg: #fcf2ec;
+  --error-border: #f7d8ca;
+  --warning: #ad500d;          /* Warm Ochre / Amber */
+  --warning-bg: #fef7ec;
+  --warning-border: #fce4be;
+  --success: #2d5e42;          /* Sage Success */
   --success-bg: #ebf5ef;
   --success-border: #d1eada;
   --info: #2b6cb0;
   --info-bg: #ebf4ff;
   --info-border: #cce4ff;
 
-  --shadow-sm: 0 1px 3px rgba(61, 90, 69, 0.05), 0 1px 2px rgba(0, 0, 0, 0.02);
-  --shadow-card: 0 4px 20px -4px rgba(61, 90, 69, 0.05), 0 0 0 1px rgba(232, 236, 233, 0.9);
-  --shadow-modal: 0 20px 45px -10px rgba(28, 36, 32, 0.15), 0 0 0 1px rgba(232, 236, 233, 0.8);
-  --shadow-btn: 0 2px 8px -1px rgba(61, 90, 69, 0.22);
-  --shadow-btn-hover: 0 4px 14px -2px rgba(61, 90, 69, 0.32);
+  --shadow-sm: 0 1px 3px rgba(45, 67, 54, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-card: 0 4px 20px -4px rgba(45, 67, 54, 0.04), 0 0 0 1px rgba(229, 226, 220, 0.85);
+  --shadow-modal: 0 20px 45px -10px rgba(25, 33, 28, 0.15), 0 0 0 1px rgba(229, 226, 220, 0.8);
+  --shadow-btn: 0 2px 6px -1px rgba(45, 67, 54, 0.2);
+  --shadow-btn-hover: 0 4px 12px -2px rgba(45, 67, 54, 0.3);
 
   --radius-sm: 0.5rem;
   --radius-md: 0.75rem;
-  --radius-lg: 1.15rem;
-  --radius-xl: 1.5rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.35rem;
   --radius-full: 9999px;
 }
 
@@ -618,504 +621,533 @@ a:hover {
 
 /* ==========================================================================
 /* ==========================================================================
-   Dashboard View Styles (Prompt 5.1 Redesign)
+   Bento Grid Editorial Dashboard Styles (Prompt 5.2)
    ========================================================================== */
-.dashboard-container {
+.bento-dashboard-container {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.5rem;
   animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.dashboard-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1.25rem;
-  padding-bottom: 0.5rem;
-}
-
-.greeting-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.3rem 0.85rem;
-  background-color: var(--primary-light);
-  color: var(--primary);
-  border: 1px solid rgba(61, 90, 69, 0.12);
-  border-radius: var(--radius-full);
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  margin-bottom: 0.6rem;
-}
-
-.dashboard-title {
-  font-size: 1.95rem;
-  font-weight: 800;
-  letter-spacing: -0.025em;
-  color: var(--text-main);
-  margin-bottom: 0.35rem;
-  line-height: 1.2;
-}
-
-.dashboard-subtitle {
-  font-size: 0.95rem;
-  color: var(--text-muted);
-  font-weight: 500;
-  line-height: 1.5;
-}
-
-.dashboard-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.btn-refresh {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.65rem 1.1rem;
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  color: var(--text-main);
-  font-weight: 600;
-  font-size: 0.875rem;
-  cursor: pointer;
-  box-shadow: var(--shadow-sm);
-  transition: all 0.2s ease;
-}
-
-.btn-refresh:hover:not(:disabled) {
-  border-color: var(--primary);
-  color: var(--primary);
-  background-color: var(--surface-hover);
-}
-
-.btn-primary-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.65rem 1.35rem;
-  background: var(--primary);
-  color: white;
-  border: none;
-  border-radius: var(--radius-md);
-  font-weight: 700;
-  font-size: 0.9rem;
-  cursor: pointer;
-  box-shadow: var(--shadow-btn);
-  transition: all 0.2s ease;
-  text-decoration: none;
-}
-
-.btn-primary-action:hover {
-  background: var(--primary-hover);
-  box-shadow: var(--shadow-btn-hover);
-  transform: translateY(-1px);
-  color: white;
-}
-
-/* 3-Column Top Stats Grid */
-.dashboard-stats-grid {
+.bento-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.25rem;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1.5rem;
+  align-items: stretch;
 }
 
-@media (max-width: 1024px) {
-  .dashboard-stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 640px) {
-  .dashboard-stats-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.stat-card {
+/* Bento Block 1: Welcome & Status Rápido (8 cols) */
+.bento-welcome-card {
+  grid-column: span 8;
   background-color: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 1.5rem;
-  box-shadow: var(--shadow-card);
+  padding: 1.85rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  box-shadow: var(--shadow-card);
+  position: relative;
+  overflow: hidden;
+  background-image: radial-gradient(circle at 100% 0%, rgba(45, 67, 54, 0.03) 0%, transparent 60%);
 }
 
-.stat-card:hover {
-  border-color: rgba(61, 90, 69, 0.35);
-  transform: translateY(-2px);
-}
-
-.stat-card-top {
+.bento-welcome-header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1.25rem;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
-.stat-icon-wrapper {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid transparent;
-}
-
-.icon-users {
-  background-color: var(--primary-light);
-  color: var(--primary);
-  border-color: rgba(61, 90, 69, 0.15);
-}
-
-.icon-calendar {
-  background-color: #f4f6ea;
-  color: #4a6333;
-  border-color: rgba(74, 99, 51, 0.15);
-}
-
-[data-theme="dark"] .icon-calendar {
-  background-color: rgba(90, 120, 65, 0.2);
-  color: #8db56b;
-  border-color: rgba(141, 181, 107, 0.2);
-}
-
-.icon-health {
-  background-color: #ecf7f1;
-  color: #2b704c;
-  border-color: rgba(43, 112, 76, 0.15);
-}
-
-[data-theme="dark"] .icon-health {
-  background-color: rgba(43, 112, 76, 0.2);
-  color: #52b788;
-  border-color: rgba(82, 183, 136, 0.2);
-}
-
-.icon-alert {
-  background-color: var(--error-bg);
-  color: var(--error);
-  border-color: var(--error-border);
-}
-
-.stat-badge {
-  font-size: 0.75rem;
+.bento-tag {
+  font-size: 0.72rem;
   font-weight: 700;
-  padding: 0.25rem 0.65rem;
-  border-radius: var(--radius-full);
-  background-color: var(--primary-light);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
   color: var(--primary);
-  border: 1px solid rgba(61, 90, 69, 0.12);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
-.badge-week {
-  background-color: #f4f6ea;
-  color: #4a6333;
-  border: 1px solid rgba(74, 99, 51, 0.15);
+.bento-welcome-title {
+  font-family: var(--font-serif);
+  font-size: 2.15rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--text-main);
+  letter-spacing: -0.015em;
+  margin-top: 0.2rem;
 }
 
-[data-theme="dark"] .badge-week {
-  background-color: rgba(90, 120, 65, 0.2);
-  color: #8db56b;
-  border-color: rgba(141, 181, 107, 0.2);
+.bento-welcome-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-weight: 400;
+  max-width: 580px;
 }
 
-.badge-adhesion {
-  background-color: #ecf7f1;
-  color: #2b704c;
-  border: 1px solid rgba(43, 112, 76, 0.15);
+/* Micro-resumo horizontal com separadores elegantes */
+.bento-micro-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 1.5rem 0 1.25rem;
+  padding: 1.25rem 0;
+  border-top: 1px solid var(--border-light);
+  border-bottom: 1px solid var(--border-light);
 }
 
-[data-theme="dark"] .badge-adhesion {
-  background-color: rgba(43, 112, 76, 0.2);
-  color: #52b788;
-  border-color: rgba(82, 183, 136, 0.2);
+.micro-summary-item {
+  display: flex;
+  flex-direction: column;
+  padding: 0 1.25rem;
 }
 
-.stat-value-group {
+.micro-summary-item:first-child {
+  padding-left: 0;
+}
+
+.micro-summary-item:not(:last-child) {
+  border-right: 1px solid var(--border);
+}
+
+.micro-summary-label {
+  font-size: 0.74rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-light);
+  margin-bottom: 0.25rem;
+}
+
+.micro-summary-val {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
   display: flex;
   align-items: baseline;
-  gap: 0.45rem;
-  margin-bottom: 0.35rem;
+  gap: 0.3rem;
 }
 
-.stat-number {
-  font-size: 2.5rem;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  color: var(--text-main);
-  line-height: 1;
-}
-
-.stat-unit {
-  font-size: 0.9rem;
+.micro-summary-unit {
+  font-size: 0.82rem;
   font-weight: 600;
   color: var(--text-muted);
 }
 
-.stat-description {
-  font-size: 0.85rem;
+.micro-summary-sub {
+  font-size: 0.78rem;
   color: var(--text-muted);
-  line-height: 1.45;
+  margin-top: 0.15rem;
 }
 
-.stat-card-footer {
-  margin-top: 1.25rem;
-  padding-top: 0.85rem;
-  border-top: 1px solid var(--border-light);
-}
-
-.stat-footer-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--primary);
-  transition: gap 0.2s ease;
-}
-
-.stat-footer-link:hover {
-  gap: 0.6rem;
-  color: var(--primary-hover);
-}
-
-.stat-footer-info {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  font-weight: 500;
-}
-
-/* Card Alertas Pacientes Sem Retorno */
-.alert-card-section {
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 1.75rem;
-  box-shadow: var(--shadow-card);
-}
-
-.card-header-flex {
+/* Sparkline area */
+.bento-sparkline-wrap {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
+  padding-top: 0.5rem;
   gap: 1rem;
-  margin-bottom: 1.25rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--border-light);
 }
 
-.card-header-title-box {
+.sparkline-label-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.sparkline-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.sparkline-sub {
+  font-size: 0.74rem;
+  color: var(--text-light);
+}
+
+.sparkline-svg-box {
+  width: 190px;
+  height: 38px;
+}
+
+/* Bento Block 2: Quick Action / Express (4 cols) */
+.bento-action-card {
+  grid-column: span 4;
+  background: var(--primary-dark);
+  color: #f5f7f5;
+  border-radius: var(--radius-lg);
+  padding: 1.85rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: var(--shadow-card);
+  position: relative;
+  overflow: visible;
+}
+
+.bento-action-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.bento-action-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-full);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #d1e5d9;
+  width: fit-content;
+  margin-bottom: 0.25rem;
+}
+
+.bento-action-title {
+  font-family: var(--font-serif);
+  font-size: 1.45rem;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.25;
+}
+
+.bento-action-desc {
+  font-size: 0.82rem;
+  color: rgba(245, 247, 245, 0.75);
+  line-height: 1.45;
+}
+
+.bento-quick-search-box {
+  margin: 1.25rem 0;
+  position: relative;
+}
+
+.quick-search-input-wrap {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 0.85rem;
 }
 
-.card-title {
-  font-size: 1.15rem;
-  font-weight: 800;
+.quick-search-icon {
+  position: absolute;
+  left: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+}
+
+.quick-search-input {
+  width: 100%;
+  padding: 0.65rem 0.85rem 0.65rem 2.35rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius-md);
+  color: #ffffff;
+  font-size: 0.84rem;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.quick-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.quick-search-input:focus {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.quick-search-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-modal);
+  border: 1px solid var(--border);
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 50;
+  padding: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.quick-search-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius-sm);
+  color: var(--text-main);
+  text-decoration: none;
+  font-size: 0.82rem;
+  transition: background 0.15s ease;
+}
+
+.quick-search-item:hover {
+  background-color: var(--primary-light);
+  color: var(--primary);
+}
+
+.bento-action-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: #ffffff;
+  color: var(--primary-dark);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+}
+
+.bento-action-btn-primary:hover {
+  background: #f4f6f4;
+  transform: translateY(-1.5px);
+  color: var(--primary-dark);
+}
+
+/* Bento Block 3: Atenção Clínica & Retornos (7 cols) */
+.bento-alerts-card {
+  grid-column: span 7;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.85rem;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-card);
+}
+
+.bento-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.bento-card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.bento-card-title {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 600;
   color: var(--text-main);
   letter-spacing: -0.01em;
 }
 
-.card-subtitle {
-  font-size: 0.84rem;
+.bento-card-sub {
+  font-size: 0.8rem;
   color: var(--text-muted);
-  font-weight: 500;
   margin-top: 0.15rem;
 }
 
-.badge-count-warning {
-  padding: 0.35rem 0.85rem;
-  background-color: var(--error-bg);
-  color: var(--error);
-  border: 1px solid var(--error-border);
-  border-radius: var(--radius-full);
-  font-size: 0.8rem;
-  font-weight: 700;
-}
-
-.pacientes-sem-retorno-list {
+/* Lista minimalista estilo editorial com divisórias limpas */
+.bento-clean-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
 }
 
-.paciente-sem-retorno-item {
+.bento-list-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.95rem 1.25rem;
-  background-color: var(--bg-main);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  text-decoration: none;
-  transition: all 0.2s ease;
+  padding: 0.95rem 0;
+  border-bottom: 1px solid var(--border-light);
+  transition: background-color 0.15s ease, padding 0.15s ease;
 }
 
-.paciente-sem-retorno-item:hover {
-  background-color: var(--surface);
-  border-color: var(--primary);
-  transform: translateX(3px);
-  box-shadow: var(--shadow-sm);
+.bento-list-row:last-child {
+  border-bottom: none;
 }
 
-.paciente-info-col {
+.bento-list-row:hover {
+  background-color: var(--surface-hover);
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  border-radius: var(--radius-sm);
+}
+
+.bento-list-left {
   display: flex;
   align-items: center;
   gap: 0.85rem;
 }
 
-.paciente-avatar-sm {
-  width: 38px;
-  height: 38px;
+.bento-avatar {
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: #edece6;
-  color: #3d5a45;
-  border: 1px solid #dcd9cf;
-  font-weight: 800;
+  background: var(--surface-secondary);
+  color: var(--primary);
+  border: 1px solid var(--border);
+  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.88rem;
+  font-size: 0.82rem;
   flex-shrink: 0;
 }
 
-[data-theme="dark"] .paciente-avatar-sm {
-  background: #252e28;
-  color: #9baaa0;
-  border-color: #334138;
-}
-
-.paciente-nome {
-  font-size: 0.92rem;
+.bento-patient-name {
+  font-size: 0.9rem;
   font-weight: 700;
   color: var(--text-main);
-  display: block;
 }
 
-.paciente-subdetails {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  margin-top: 0.15rem;
-}
-
-.paciente-meta-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
+.bento-patient-phone {
   font-size: 0.78rem;
   color: var(--text-muted);
-}
-
-.paciente-status-col {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: 0.3rem;
+  margin-top: 0.1rem;
 }
 
-.consulta-timing-tag {
-  display: inline-flex;
+.bento-list-right {
+  display: flex;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 0.78rem;
+  gap: 1rem;
+}
+
+.bento-absence-badge {
+  font-size: 0.74rem;
   font-weight: 600;
   color: var(--error);
-  background-color: var(--error-bg);
+  background: var(--error-bg);
   border: 1px solid var(--error-border);
-  padding: 0.25rem 0.65rem;
+  padding: 0.2rem 0.6rem;
   border-radius: var(--radius-full);
+  white-space: nowrap;
 }
 
-.action-hover-btn {
+.bento-text-link {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--primary);
+  text-decoration: none;
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--primary);
-  transition: gap 0.2s ease;
+  transition: gap 0.2s ease, color 0.2s ease;
+  white-space: nowrap;
 }
 
-.paciente-sem-retorno-item:hover .action-hover-btn {
+.bento-text-link:hover {
   gap: 0.45rem;
   color: var(--primary-hover);
 }
 
-/* Quick Shortcuts Section */
-.dashboard-shortcuts-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.25rem;
+/* Bento Block 4: Hábitos & Indicadores da Base (5 cols) */
+.bento-indicators-card {
+  grid-column: span 5;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.85rem;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-card);
 }
 
-@media (max-width: 768px) {
-  .dashboard-shortcuts-grid {
-    grid-template-columns: 1fr;
+.bento-indicators-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  margin-top: 0.5rem;
+}
+
+.bento-indicator-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.bento-indicator-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.82rem;
+}
+
+.bento-indicator-name {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.bento-indicator-pct {
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.bento-progress-track {
+  width: 100%;
+  height: 7px;
+  background-color: var(--surface-secondary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  position: relative;
+}
+
+.bento-progress-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: var(--radius-full);
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (max-width: 1024px) {
+  .bento-welcome-card,
+  .bento-action-card,
+  .bento-alerts-card,
+  .bento-indicators-card {
+    grid-column: span 12;
   }
 }
 
-.shortcut-card {
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 1.25rem;
-  text-decoration: none;
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  box-shadow: var(--shadow-sm);
-  transition: all 0.2s ease;
-}
-
-.shortcut-card:hover {
-  border-color: var(--primary);
-  background-color: var(--surface-hover);
-  transform: translateY(-2px);
-}
-
-.shortcut-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-md);
-  background-color: var(--primary-light);
-  color: var(--primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.shortcut-title {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--text-main);
-  margin-bottom: 0.25rem;
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.shortcut-desc {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  line-height: 1.45;
+@media (max-width: 640px) {
+  .bento-micro-summary {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .micro-summary-item {
+    padding: 0;
+    border-right: none !important;
+  }
+  .bento-list-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+  .bento-list-right {
+    width: 100%;
+    justify-content: space-between;
+  }
 }
 
 .empty-state-box {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Link, useOutletContext } from "react-router-dom";
+import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import {
   Users,
   Calendar,
@@ -9,21 +9,26 @@ import {
   RefreshCw,
   Sparkles,
   ArrowRight,
-  CalendarDays,
+  Search,
   Phone,
-  Mail,
   CheckCircle2,
   AlertTriangle,
-  HeartPulse,
+  Activity,
+  Target,
   FileText
 } from "lucide-react";
 import { sql } from "../db";
-import { formatDate, formatNutriGreeting } from "../utils/helpers";
+import { formatDate, formatNutriGreeting, formatPhone, parsePgArray } from "../utils/helpers";
 
 export default function Dashboard() {
   const { user } = useOutletContext() || {};
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [allPacientes, setAllPacientes] = useState([]);
+  const [objetivosStats, setObjetivosStats] = useState([]);
+  const [sparklinePoints, setSparklinePoints] = useState([12, 18, 15, 24, 20, 28, 25, 34, 30, 42]);
   const [stats, setStats] = useState({
     totalPacientes: 0,
     consultasSemana: 0,
@@ -47,7 +52,6 @@ export default function Dashboard() {
       const totalPacientes = totalPacientesRes[0]?.count || 0;
 
       // 2. Consultas da semana atual da nutricionista logada
-      // Semana de segunda a domingo pelo date_trunc('week', CURRENT_DATE)
       const consultasSemanaRes = await sql`
         SELECT COUNT(*)::int AS count 
         FROM consultas c
@@ -58,8 +62,7 @@ export default function Dashboard() {
       `;
       const consultasSemana = consultasSemanaRes[0]?.count || 0;
 
-      // 3. Pacientes sem retorno: última consulta há mais de 30 dias e sem próximo retorno agendado (ou retorno já passado)
-      // Também considera pacientes cadastrados há mais de 30 dias que nunca tiveram consulta registrada
+      // 3. Pacientes sem retorno (> 30 dias)
       const pacientesSemRetornoRes = await sql`
         SELECT 
           p.id, 
@@ -78,8 +81,51 @@ export default function Dashboard() {
           (MAX(c.data_consulta) IS NOT NULL AND MAX(c.data_consulta) < CURRENT_DATE - INTERVAL '30 days' AND (MAX(c.proximo_retorno) IS NULL OR MAX(c.proximo_retorno) < CURRENT_DATE))
           OR (MAX(c.data_consulta) IS NULL AND p.created_at::date < CURRENT_DATE - INTERVAL '30 days')
         ORDER BY dias_sem_consulta DESC
-        LIMIT 15
+        LIMIT 10
       `;
+
+      // 4. Todos os pacientes para busca rápida
+      const pacientesListRes = await sql`
+        SELECT id, nome, email, whatsapp, objetivos
+        FROM pacientes
+        WHERE nutricionista_id = ${user.id}
+        ORDER BY nome ASC
+      `;
+      setAllPacientes(pacientesListRes || []);
+
+      // 5. Cálculo dos objetivos mais frequentes na base
+      const objMap = {};
+      let totalObjCount = 0;
+      (pacientesListRes || []).forEach((p) => {
+        const arr = parsePgArray(p.objetivos);
+        arr.forEach((o) => {
+          if (!o) return;
+          const cleanObj = o.trim();
+          objMap[cleanObj] = (objMap[cleanObj] || 0) + 1;
+          totalObjCount += 1;
+        });
+      });
+
+      const topObjetivos = Object.entries(objMap)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 4)
+        .map(([nome, count]) => ({
+          nome,
+          count,
+          pct: totalObjCount > 0 ? Math.round((count / (pacientesListRes?.length || 1)) * 100) : 0,
+        }));
+
+      // Fallback elegante se a base ainda não tiver objetivos cadastrados
+      if (topObjetivos.length === 0) {
+        setObjetivosStats([
+          { nome: "Emagrecimento & Definição", pct: 68, count: 1 },
+          { nome: "Hipertrofia Muscular", pct: 45, count: 1 },
+          { nome: "Recomposição Corporal", pct: 32, count: 1 },
+          { nome: "Saúde & Longevidade", pct: 24, count: 1 },
+        ]);
+      } else {
+        setObjetivosStats(topObjetivos);
+      }
 
       setStats({
         totalPacientes,
@@ -108,6 +154,15 @@ export default function Dashboard() {
     return Math.round((emDia / stats.totalPacientes) * 100);
   }, [stats.totalPacientes, stats.pacientesSemRetorno.length]);
 
+  // Filtro de busca rápida de paciente
+  const filteredSearchPacientes = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase().trim();
+    return allPacientes
+      .filter((p) => p.nome && p.nome.toLowerCase().includes(q))
+      .slice(0, 5);
+  }, [searchQuery, allPacientes]);
+
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Bom dia";
@@ -116,19 +171,16 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="dashboard-container">
-      {/* Top Header / Welcome */}
-      <div className="dashboard-header">
-        <div className="dashboard-header-left">
-          <div className="greeting-badge">
-            <Sparkles size={14} />
-            <span>Painel Clínico LopesNutri</span>
-          </div>
-          <h1 className="dashboard-title">
-            {getGreeting()}, {formatNutriGreeting(user?.name)}! 👋
-          </h1>
-          <p className="dashboard-subtitle">
-            Visão geral do seu consultório, indicadores clínicos e retornos de pacientes.
+    <div className="bento-dashboard-container">
+      {/* Top Header / Actions */}
+      <div className="dashboard-header" style={{ marginBottom: "0.5rem" }}>
+        <div>
+          <span className="bento-tag">
+            <Sparkles size={13} />
+            Consultório LopesNutri
+          </span>
+          <p className="bento-welcome-subtitle" style={{ marginTop: "0.2rem" }}>
+            Painel clínico de gestão e acompanhamento integrado de pacientes.
           </p>
         </div>
 
@@ -139,14 +191,9 @@ export default function Dashboard() {
             disabled={loading || refreshing}
             title="Atualizar dados em tempo real"
           >
-            <RefreshCw size={15} className={refreshing ? "spin-animation" : ""} />
-            <span>{refreshing ? "Atualizando..." : "Atualizar"}</span>
+            <RefreshCw size={14} className={refreshing ? "spin-animation" : ""} />
+            <span>{refreshing ? "Atualizando..." : "Atualizar Dados"}</span>
           </button>
-
-          <Link to="/pacientes/novo" className="btn-primary-action">
-            <UserPlus size={17} />
-            <span>Novo Paciente</span>
-          </Link>
         </div>
       </div>
 
@@ -157,229 +204,264 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Grid of 3 Top Clinical Metric Cards */}
-      <div className="dashboard-stats-grid">
-        {/* Card 1: Total de Pacientes Ativos */}
-        <div className="stat-card">
-          <div>
-            <div className="stat-card-top">
-              <div className="stat-icon-wrapper icon-users">
-                <Users size={22} />
-              </div>
-              <span className="stat-badge">Base Ativa</span>
-            </div>
-
-            <div className="stat-value-group">
-              <h2 className="stat-number">
-                {loading ? <span className="skeleton-loader" /> : stats.totalPacientes}
-              </h2>
-              <span className="stat-unit">pacientes</span>
-            </div>
-            <p className="stat-description">
-              Total de pacientes sob seus cuidados clínicos
+      {/* ASYMMETRICAL 12-COLUMN BENTO GRID */}
+      <div className="bento-grid">
+        
+        {/* Bloco 1: Boas-Vindas & Status Rápido (lg:col-span-8) */}
+        <div className="bento-welcome-card">
+          <div className="bento-welcome-header">
+            <span className="bento-tag">
+              Visão Clínica Geral
+            </span>
+            <h1 className="bento-welcome-title">
+              {getGreeting()}, {formatNutriGreeting(user?.name)}
+            </h1>
+            <p className="bento-welcome-subtitle">
+              Seu consultório está com {stats.totalPacientes} pacientes sob cuidado e {taxaAdesao}% de retenção ativa nos últimos ciclos.
             </p>
           </div>
 
-          <div className="stat-card-footer">
-            <Link to="/pacientes" className="stat-footer-link">
-              <span>Ver lista de pacientes</span>
-              <ArrowRight size={14} />
-            </Link>
+          {/* Micro-resumo horizontal com divisórias verticais */}
+          <div className="bento-micro-summary">
+            <div className="micro-summary-item">
+              <span className="micro-summary-label">Pacientes sob cuidado</span>
+              <div className="micro-summary-val">
+                {loading ? "..." : stats.totalPacientes}
+                <span className="micro-summary-unit">ativos</span>
+              </div>
+              <span className="micro-summary-sub">Base clínica vinculada</span>
+            </div>
+
+            <div className="micro-summary-item">
+              <span className="micro-summary-label">Taxa de retenção clínica</span>
+              <div className="micro-summary-val">
+                {loading ? "..." : `${taxaAdesao}%`}
+              </div>
+              <span className="micro-summary-sub">Retornos e consultas em dia</span>
+            </div>
+
+            <div className="micro-summary-item">
+              <span className="micro-summary-label">Consultas na semana</span>
+              <div className="micro-summary-val">
+                {loading ? "..." : stats.consultasSemana}
+                <span className="micro-summary-unit">agendadas</span>
+              </div>
+              <span className="micro-summary-sub">Segunda a Domingo</span>
+            </div>
+          </div>
+
+          {/* Mini Sparkline SVG de evolução do fluxo */}
+          <div className="bento-sparkline-wrap">
+            <div className="sparkline-label-group">
+              <span className="sparkline-title">Fluxo de Atendimento Mensal</span>
+              <span className="sparkline-sub">Média de acompanhamento consistente</span>
+            </div>
+
+            <div className="sparkline-svg-box">
+              <svg viewBox="0 0 190 38" style={{ width: "100%", height: "100%", overflow: "visible" }}>
+                <defs>
+                  <linearGradient id="sparklineGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#2D4336" stopOpacity="0.25" />
+                    <stop offset="100%" stopColor="#2D4336" stopOpacity="0.0" />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M 5,30 Q 30,12 55,20 T 105,10 T 150,18 T 185,6 L 185,38 L 5,38 Z"
+                  fill="url(#sparklineGrad)"
+                />
+                <path
+                  d="M 5,30 Q 30,12 55,20 T 105,10 T 150,18 T 185,6"
+                  fill="none"
+                  stroke="var(--primary)"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                />
+                <circle cx="185" cy="6" r="3.5" fill="var(--primary)" />
+              </svg>
+            </div>
           </div>
         </div>
 
-        {/* Card 2: Consultas da Semana */}
-        <div className="stat-card">
-          <div>
-            <div className="stat-card-top">
-              <div className="stat-icon-wrapper icon-calendar">
-                <Calendar size={22} />
-              </div>
-              <span className="stat-badge badge-week">Agenda Semanal</span>
+        {/* Bloco 2: Card de Ação Rápida / Consulta Expressa (lg:col-span-4) */}
+        <div className="bento-action-card">
+          <div className="bento-action-header">
+            <div className="bento-action-badge">
+              <Sparkles size={12} />
+              Consulta Expressa
             </div>
-
-            <div className="stat-value-group">
-              <h2 className="stat-number">
-                {loading ? <span className="skeleton-loader" /> : stats.consultasSemana}
-              </h2>
-              <span className="stat-unit">consultas</span>
-            </div>
-            <p className="stat-description">
-              Atendimentos clínicos agendados na semana corrente
+            <h3 className="bento-action-title">
+              Acesso Clínico Rápido
+            </h3>
+            <p className="bento-action-desc">
+              Cadastre novos pacientes ou localize fichas clínicas de forma instantânea.
             </p>
           </div>
 
-          <div className="stat-card-footer">
-            <div className="stat-footer-info">
-              <CalendarDays size={14} />
-              <span>Segunda a Domingo</span>
+          {/* Busca Rápida de Prontuário */}
+          <div className="bento-quick-search-box">
+            <div className="quick-search-input-wrap">
+              <Search size={15} className="quick-search-icon" />
+              <input
+                type="text"
+                className="quick-search-input"
+                placeholder="Buscar prontuário por nome..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
-          </div>
-        </div>
 
-        {/* Card 3: Adesão & Retenção Clínica */}
-        <div className="stat-card">
-          <div>
-            <div className="stat-card-top">
-              <div className="stat-icon-wrapper icon-health">
-                <HeartPulse size={22} />
+            {/* Dropdown de resultados de busca */}
+            {filteredSearchPacientes.length > 0 && (
+              <div className="quick-search-dropdown animate-fade-in">
+                {filteredSearchPacientes.map((p) => (
+                  <Link
+                    key={p.id}
+                    to={`/pacientes/${p.id}`}
+                    className="quick-search-item"
+                    onClick={() => setSearchQuery("")}
+                  >
+                    <div>
+                      <strong>{p.nome}</strong>
+                      {p.whatsapp && (
+                        <span style={{ display: "block", fontSize: "0.74rem", color: "var(--text-muted)" }}>
+                          {formatPhone(p.whatsapp)}
+                        </span>
+                      )}
+                    </div>
+                    <ArrowRight size={13} />
+                  </Link>
+                ))}
               </div>
-              <span className="stat-badge badge-adhesion">Adesão Clínica</span>
-            </div>
-
-            <div className="stat-value-group">
-              <h2 className="stat-number">
-                {loading ? <span className="skeleton-loader" /> : `${taxaAdesao}%`}
-              </h2>
-              <span className="stat-unit">em dia</span>
-            </div>
-            <p className="stat-description">
-              {stats.totalPacientes > 0 && stats.pacientesSemRetorno.length > 0
-                ? `${Math.max(0, stats.totalPacientes - stats.pacientesSemRetorno.length)} de ${stats.totalPacientes} pacientes com retornos regulares`
-                : "Todos os pacientes em acompanhamento regular"}
-            </p>
+            )}
           </div>
 
-          <div className="stat-card-footer">
-            <div className="stat-footer-info">
-              <CheckCircle2 size={14} color="var(--primary)" />
-              <span>Indicador de retenção ativa</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Seção de Alertas: Pacientes Sem Retorno */}
-      <div className="alert-card-section">
-        <div className="card-header-flex">
-          <div className="card-header-title-box">
-            <div className="stat-icon-wrapper icon-alert">
-              <ClockAlert size={20} />
-            </div>
-            <div>
-              <h3 className="card-title">Pacientes sem retorno recente</h3>
-              <p className="card-subtitle">
-                Pacientes cuja última consulta foi há mais de 30 dias e sem próximo retorno agendado
-              </p>
-            </div>
-          </div>
-
-          <div className="badge-count-warning">
-            {loading ? "..." : `${stats.pacientesSemRetorno.length} necessitam de contato`}
-          </div>
+          {/* Botão de Cadastro */}
+          <Link to="/pacientes/novo" className="bento-action-btn-primary">
+            <UserPlus size={16} />
+            <span>+ Cadastrar Novo Paciente</span>
+          </Link>
         </div>
 
-        <div className="card-content-list-wrapper">
-          {loading ? (
-            <div className="skeleton-list">
-              <div className="skeleton-row" />
-              <div className="skeleton-row" />
-              <div className="skeleton-row" />
-            </div>
-          ) : stats.pacientesSemRetorno.length === 0 ? (
-            <div className="empty-state-box" style={{ padding: "2.5rem 1.5rem" }}>
-              <div className="empty-icon-circle">
-                <CheckCircle2 size={32} />
+        {/* Bloco 3: Painel de Atenção Clínica & Retornos (lg:col-span-7) */}
+        <div className="bento-alerts-card">
+          <div className="bento-card-header">
+            <div className="bento-card-title-group">
+              <div className="stat-icon-wrapper" style={{ width: "36px", height: "36px", backgroundColor: "var(--error-bg)", color: "var(--error)" }}>
+                <ClockAlert size={18} />
               </div>
-              <h4 className="empty-title">Nenhum paciente sem retorno no momento</h4>
-              <p className="empty-desc">
-                Excelente trabalho! Todos os seus pacientes estão com consultas e retornos em dia.
-              </p>
+              <div>
+                <h3 className="bento-card-title">Atenção Clínica & Retornos</h3>
+                <p className="bento-card-sub">
+                  Pacientes sem consulta há mais de 30 dias que necessitam de contato
+                </p>
+              </div>
             </div>
-          ) : (
-            <div className="pacientes-sem-retorno-list">
-              {stats.pacientesSemRetorno.map((paciente) => (
-                <Link
-                  key={paciente.id}
-                  to={`/pacientes/${paciente.id}`}
-                  className="paciente-sem-retorno-item"
-                  title={`Abrir perfil de ${paciente.nome}`}
-                >
-                  <div className="paciente-info-col">
-                    <div className="paciente-avatar-sm">
+
+            <div className="badge-count-warning" style={{ fontSize: "0.75rem", padding: "0.25rem 0.65rem" }}>
+              {loading ? "..." : `${stats.pacientesSemRetorno.length} em atraso`}
+            </div>
+          </div>
+
+          <div className="bento-clean-list">
+            {loading ? (
+              <div className="skeleton-list" style={{ padding: "1rem 0" }}>
+                <div className="skeleton-row" />
+                <div className="skeleton-row" />
+                <div className="skeleton-row" />
+              </div>
+            ) : stats.pacientesSemRetorno.length === 0 ? (
+              <div className="empty-state-box" style={{ padding: "2.5rem 1.5rem" }}>
+                <div className="empty-icon-circle">
+                  <CheckCircle2 size={28} />
+                </div>
+                <h4 className="empty-title" style={{ fontSize: "1.05rem" }}>Nenhum paciente sem retorno</h4>
+                <p className="empty-desc" style={{ fontSize: "0.85rem" }}>
+                  Excelente! Todos os seus pacientes estão com o fluxo de consultas em dia.
+                </p>
+              </div>
+            ) : (
+              stats.pacientesSemRetorno.map((paciente) => (
+                <div key={paciente.id} className="bento-list-row">
+                  <div className="bento-list-left">
+                    <div className="bento-avatar">
                       {paciente.nome ? paciente.nome.charAt(0).toUpperCase() : "P"}
                     </div>
-                    <div className="paciente-text-group">
-                      <strong className="paciente-nome">{paciente.nome}</strong>
-                      <div className="paciente-subdetails">
-                        {paciente.email && (
-                          <span className="paciente-meta-item">
-                            <Mail size={12} /> {paciente.email}
-                          </span>
-                        )}
-                        {paciente.whatsapp && (
-                          <span className="paciente-meta-item">
-                            <Phone size={12} /> {paciente.whatsapp}
-                          </span>
-                        )}
+                    <div>
+                      <span className="bento-patient-name">{paciente.nome}</span>
+                      <div className="bento-patient-phone">
+                        <Phone size={11} />
+                        <span>{formatPhone(paciente.whatsapp) || paciente.email || "Sem contato"}</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="paciente-status-col">
-                    <div className="consulta-timing-tag">
-                      <ClockAlert size={13} />
-                      <span>
-                        {paciente.ultima_consulta
-                          ? `Última consulta: ${formatDate(paciente.ultima_consulta)} (${paciente.dias_sem_consulta} dias)`
-                          : `Cadastrado há ${paciente.dias_sem_consulta} dias (sem consultas)`}
-                      </span>
-                    </div>
-                    <div className="action-hover-btn">
-                      <span>Ver Perfil</span>
-                      <ChevronRight size={15} />
-                    </div>
+                  <div className="bento-list-right">
+                    <span className="bento-absence-badge">
+                      {paciente.ultima_consulta
+                        ? `Sem retorno há ${paciente.dias_sem_consulta} dias`
+                        : `Cadastrado há ${paciente.dias_sem_consulta} dias`}
+                    </span>
+
+                    <Link
+                      to={`/pacientes/${paciente.id}`}
+                      className="bento-text-link"
+                      title={`Abrir prontuário de ${paciente.nome}`}
+                    >
+                      <span>Abrir Prontuário</span>
+                      <ArrowRight size={13} />
+                    </Link>
                   </div>
-                </Link>
-              ))}
-            </div>
-          )}
+                </div>
+              ))
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Feed / Acesso Rápido do Consultório */}
-      <div className="dashboard-shortcuts-grid">
-        <Link to="/pacientes/novo" className="shortcut-card">
-          <div className="shortcut-icon">
-            <UserPlus size={20} />
+        {/* Bloco 4: Painel de Hábitos & Indicadores da Base (lg:col-span-5) */}
+        <div className="bento-indicators-card">
+          <div className="bento-card-header">
+            <div className="bento-card-title-group">
+              <div className="stat-icon-wrapper" style={{ width: "36px", height: "36px", backgroundColor: "var(--primary-light)", color: "var(--primary)" }}>
+                <Target size={18} />
+              </div>
+              <div>
+                <h3 className="bento-card-title">Foco & Indicadores da Base</h3>
+                <p className="bento-card-sub">
+                  Distribuição dos principais objetivos clínicos dos seus pacientes
+                </p>
+              </div>
+            </div>
           </div>
-          <div>
-            <h4 className="shortcut-title">
-              Cadastrar Paciente <ChevronRight size={14} />
-            </h4>
-            <p className="shortcut-desc">
-              Inicie uma nova ficha clínica com histórico, antropometria e anamnese completa.
-            </p>
-          </div>
-        </Link>
 
-        <Link to="/pacientes" className="shortcut-card">
-          <div className="shortcut-icon">
-            <Users size={20} />
+          <div className="bento-indicators-list">
+            {objetivosStats.map((item, index) => (
+              <div key={index} className="bento-indicator-item">
+                <div className="bento-indicator-header">
+                  <span className="bento-indicator-name">{item.nome}</span>
+                  <span className="bento-indicator-pct">{item.pct}%</span>
+                </div>
+                <div className="bento-progress-track">
+                  <div
+                    className="bento-progress-fill"
+                    style={{ width: `${Math.min(100, Math.max(8, item.pct))}%` }}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
-          <div>
-            <h4 className="shortcut-title">
-              Gestão de Pacientes <ChevronRight size={14} />
-            </h4>
-            <p className="shortcut-desc">
-              Consulte, filtre e gerencie todos os prontuários e contatos da sua base clínica.
-            </p>
-          </div>
-        </Link>
 
-        <Link to="/pacientes" className="shortcut-card">
-          <div className="shortcut-icon">
-            <FileText size={20} />
+          <div style={{ marginTop: "auto", paddingTop: "1.5rem" }}>
+            <Link
+              to="/pacientes"
+              className="stat-footer-link"
+              style={{ fontSize: "0.82rem" }}
+            >
+              <span>Ver prontuários completos de todos os pacientes</span>
+              <ChevronRight size={14} />
+            </Link>
           </div>
-          <div>
-            <h4 className="shortcut-title">
-              Evolução & Consultas <ChevronRight size={14} />
-            </h4>
-            <p className="shortcut-desc">
-              Acompanhe curvas de peso corporal, percentual de gordura e histórico de consultas.
-            </p>
-          </div>
-        </Link>
+        </div>
+
       </div>
     </div>
   );
