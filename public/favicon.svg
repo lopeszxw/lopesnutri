@@ -1,3 +1,34 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <image width="64" height="64" href="data:image/png;base64,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" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <filter id="badgeShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- Dark Badge Background for universal visibility in light & dark browser tabs -->
+  <rect width="128" height="128" rx="28" fill="#111311" />
+
+  <!-- LopesNutri Circular Ring -->
+  <circle cx="68" cy="68" r="42" fill="none" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round" />
+
+  <!-- Three Leaves at top-left -->
+  <!-- Top leaf -->
+  <path d="M 44 42 C 44 26 56 16 56 16 C 56 16 64 28 58 42 C 54 44 46 44 44 42 Z" fill="#ffffff" />
+  <!-- Middle diagonal leaf -->
+  <path d="M 38 46 C 24 38 18 26 18 26 C 18 26 34 22 46 36 C 46 40 42 44 38 46 Z" fill="#ffffff" />
+  <!-- Bottom horizontal leaf -->
+  <path d="M 40 54 C 24 54 18 44 18 44 C 18 44 30 36 44 46 C 44 50 42 54 40 54 Z" fill="#ffffff" />
+
+  <!-- Inner Monogram (L / N Leaf Silhouette) -->
+  <!-- Left vertical pillar with smooth bottom scoop -->
+  <path d="M 52 50 L 60 50 L 60 86 L 52 86 Z" fill="#ffffff" />
+  
+  <!-- Right organic curve & drop -->
+  <path d="M 62 60 C 62 50 72 48 80 54 C 88 60 90 74 84 84 C 78 92 64 92 62 86 Z" fill="#ffffff" />
+  
+  <!-- Inner negative cutout inside the right curve -->
+  <path d="M 68 62 C 72 62 76 66 74 72 C 72 78 64 80 62 76 Z" fill="#111311" />
+  
+  <!-- Silhouette head dot -->
+  <circle cx="72" cy="62" r="4.5" fill="#111311" />
 </svg>
