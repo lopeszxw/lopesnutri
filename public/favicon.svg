@@ -1,15 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <defs>
-    <filter id="badgeShadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.25"/>
-    </filter>
-  </defs>
-
-  <!-- Dark Badge Background for universal visibility in light & dark browser tabs -->
-  <rect width="128" height="128" rx="28" fill="#111311" />
+  <!-- Perfect Circle Background -->
+  <circle cx="64" cy="64" r="64" fill="#111311" />
 
   <!-- LopesNutri Circular Ring -->
-  <circle cx="68" cy="68" r="42" fill="none" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round" />
+  <circle cx="68" cy="68" r="41" fill="none" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round" />
 
   <!-- Three Leaves at top-left -->
   <!-- Top leaf -->
@@ -20,7 +14,7 @@
   <path d="M 40 54 C 24 54 18 44 18 44 C 18 44 30 36 44 46 C 44 50 42 54 40 54 Z" fill="#ffffff" />
 
   <!-- Inner Monogram (L / N Leaf Silhouette) -->
-  <!-- Left vertical pillar with smooth bottom scoop -->
+  <!-- Left vertical pillar -->
   <path d="M 52 50 L 60 50 L 60 86 L 52 86 Z" fill="#ffffff" />
   
   <!-- Right organic curve & drop -->
