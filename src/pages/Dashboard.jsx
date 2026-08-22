@@ -16,6 +16,7 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { sql } from "../db";
+import { formatDate } from "../utils/helpers";
 
 export default function Dashboard() {
   const { user } = useOutletContext() || {};
@@ -97,17 +98,6 @@ export default function Dashboard() {
       fetchDashboardData();
     }
   }, [user?.id]);
-
-  const formatDate = (dateString) => {
-    if (!dateString) return "Sem registro";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      timeZone: "UTC",
-    });
-  };
 
   const getGreeting = () => {
     const hour = new Date().getHours();

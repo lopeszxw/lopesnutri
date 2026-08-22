@@ -9,6 +9,7 @@ import {
   Info,
   ArrowRight
 } from "lucide-react";
+import { safeDateString } from "../utils/helpers";
 
 export default function EvolucaoPesoChart({ pesoInicial, dataCadastro, consultas = [] }) {
   const [hoveredPoint, setHoveredPoint] = useState(null);
@@ -22,7 +23,7 @@ export default function EvolucaoPesoChart({ pesoInicial, dataCadastro, consultas
     if (!isNaN(pInicialNum) && pInicialNum > 0) {
       points.push({
         id: "inicial",
-        data: dataCadastro ? dataCadastro.split("T")[0] : "Cadastro",
+        data: dataCadastro ? safeDateString(dataCadastro) : "Cadastro",
         peso: pInicialNum,
         label: "Peso Inicial (Cadastro)",
         isInitial: true,
@@ -33,12 +34,12 @@ export default function EvolucaoPesoChart({ pesoInicial, dataCadastro, consultas
 
     // Pontos das consultas ordenadas cronologicamente
     const consultasComPeso = (consultas || [])
-      .filter((c) => c.peso !== null && c.peso !== undefined && !isNaN(parseFloat(c.peso)))
+      .filter((c) => c && c.peso !== null && c.peso !== undefined && !isNaN(parseFloat(c.peso)))
       .sort((a, b) => new Date(a.data_consulta) - new Date(b.data_consulta));
 
     consultasComPeso.forEach((c, index) => {
       // Se a primeira consulta tiver a mesma data e peso do inicial, não duplicar ponto
-      const cDate = c.data_consulta ? c.data_consulta.split("T")[0] : "";
+      const cDate = c.data_consulta ? safeDateString(c.data_consulta) : "";
       const cPeso = parseFloat(c.peso);
 
       if (
@@ -188,14 +189,19 @@ export default function EvolucaoPesoChart({ pesoInicial, dataCadastro, consultas
   const formatDate = (dateStr) => {
     if (!dateStr || dateStr === "Cadastro") return "Início";
     try {
-      const parts = dateStr.split("-");
-      if (parts.length === 3) {
-        return `${parts[2]}/${parts[1]}`;
+      if (typeof dateStr === "string" && dateStr.includes("-")) {
+        const parts = dateStr.split("-");
+        if (parts.length === 3) {
+          return `${parts[2]}/${parts[1]}`;
+        }
       }
       const d = new Date(dateStr);
-      return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+      if (!isNaN(d.getTime())) {
+        return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+      }
+      return String(dateStr);
     } catch {
-      return dateStr;
+      return String(dateStr);
     }
   };
 

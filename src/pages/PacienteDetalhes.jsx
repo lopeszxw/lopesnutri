@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { sql } from "../db";
 import EvolucaoPesoChart from "../components/EvolucaoPesoChart";
+import { parsePgArray, formatDate, safeDateString } from "../utils/helpers";
 
 export default function PacienteDetalhes() {
   const { id } = useParams();
@@ -45,7 +46,7 @@ export default function PacienteDetalhes() {
   const [submittingConsulta, setSubmittingConsulta] = useState(false);
   const [consultaError, setConsultaError] = useState("");
   const [newConsulta, setNewConsulta] = useState({
-    data_consulta: new Date().toISOString().split("T")[0],
+    data_consulta: safeDateString(new Date()),
     peso: "",
     cintura: "",
     quadril: "",
@@ -92,28 +93,22 @@ export default function PacienteDetalhes() {
     }
   }, [id, user?.id]);
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      timeZone: "UTC"
-    });
-  };
-
   // Idade calculada
   const idadeCalculada = useMemo(() => {
     if (!paciente?.data_nascimento) return null;
-    const nascimento = new Date(paciente.data_nascimento);
-    const hoje = new Date();
-    let idade = hoje.getFullYear() - nascimento.getFullYear();
-    const m = hoje.getMonth() - nascimento.getMonth();
-    if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) {
-      idade--;
+    try {
+      const nascimento = new Date(paciente.data_nascimento);
+      if (isNaN(nascimento.getTime())) return null;
+      const hoje = new Date();
+      let idade = hoje.getFullYear() - nascimento.getFullYear();
+      const m = hoje.getMonth() - nascimento.getMonth();
+      if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) {
+        idade--;
+      }
+      return idade > 0 ? `${idade} anos` : "Menos de 1 ano";
+    } catch {
+      return null;
     }
-    return idade > 0 ? `${idade} anos` : "Menos de 1 ano";
   }, [paciente?.data_nascimento]);
 
   // IMC Inicial calculado
@@ -167,7 +162,7 @@ export default function PacienteDetalhes() {
       `;
 
       setNewConsulta({
-        data_consulta: new Date().toISOString().split("T")[0],
+        data_consulta: safeDateString(new Date()),
         peso: "",
         cintura: "",
         quadril: "",
@@ -211,10 +206,10 @@ export default function PacienteDetalhes() {
     );
   }
 
-  const objetivosList = paciente.objetivos || [];
-  const patologiasList = paciente.patologias || [];
-  const restricoesList = paciente.restricoes_alimentares || [];
-  const alergiasList = paciente.alergias || [];
+  const objetivosList = parsePgArray(paciente.objetivos);
+  const patologiasList = parsePgArray(paciente.patologias);
+  const restricoesList = parsePgArray(paciente.restricoes_alimentares);
+  const alergiasList = parsePgArray(paciente.alergias);
 
   return (
     <div className="paciente-detalhes-container animate-fade-in">

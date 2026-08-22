@@ -17,6 +17,7 @@ import {
   Target
 } from "lucide-react";
 import { sql } from "../db";
+import { parsePgArray, formatDate } from "../utils/helpers";
 
 export default function Pacientes() {
   const { user } = useOutletContext() || {};
@@ -67,17 +68,6 @@ export default function Pacientes() {
     }
   }, [user?.id]);
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      timeZone: "UTC",
-    });
-  };
-
   const getPatientStatus = (paciente) => {
     if (!paciente.ultima_consulta && !paciente.proximo_retorno) {
       return { label: "Ativo", className: "status-active" };
@@ -110,7 +100,7 @@ export default function Pacientes() {
       const email = (p.email || "").toLowerCase();
       const whatsapp = (p.whatsapp || "").toLowerCase();
       const objetivo = (p.objetivo_texto || "").toLowerCase();
-      const objetivosArr = (p.objetivos || []).join(" ").toLowerCase();
+      const objetivosArr = parsePgArray(p.objetivos).join(" ").toLowerCase();
       return (
         nome.includes(term) ||
         email.includes(term) ||
@@ -280,7 +270,7 @@ export default function Pacientes() {
               ) : (
                 paginatedPacientes.map((paciente) => {
                   const status = getPatientStatus(paciente);
-                  const objetivosList = paciente.objetivos || [];
+                  const objetivosList = parsePgArray(paciente.objetivos);
                   const objetivoExibicao =
                     paciente.objetivo_texto ||
                     (objetivosList.length > 0 ? objetivosList[0] : "Acompanhamento geral");
