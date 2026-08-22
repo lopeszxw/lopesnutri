@@ -2780,6 +2780,68 @@ a:hover {
   line-height: 1.4;
 }
 
+/* Planos Alimentares Section */
+.planos-alimentares-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.btn-disabled-hint {
+  opacity: 0.65;
+  cursor: not-allowed;
+  background-color: var(--surface-secondary);
+  color: var(--text-muted);
+  border: 1px dashed var(--border);
+}
+
+.btn-disabled-hint:hover {
+  background-color: var(--surface-secondary);
+  color: var(--text-muted);
+  border-color: var(--border);
+}
+
+.plano-item-card {
+  background-color: var(--bg-main);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  transition: border-color 0.2s ease;
+}
+
+.plano-item-card:hover {
+  border-color: var(--primary);
+}
+
+.plano-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.plano-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.plano-date-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+}
+
+.plano-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
 /* Modals */
 .modal-backdrop {
   position: fixed;

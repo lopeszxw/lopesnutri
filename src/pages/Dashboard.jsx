@@ -16,7 +16,7 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { sql } from "../db";
-import { formatDate } from "../utils/helpers";
+import { formatDate, formatNutriGreeting } from "../utils/helpers";
 
 export default function Dashboard() {
   const { user } = useOutletContext() || {};
@@ -116,7 +116,7 @@ export default function Dashboard() {
             <span>Painel LopesNutri</span>
           </div>
           <h1 className="dashboard-title">
-            {getGreeting()}, {user?.name ? user.name.split(" ")[0] : "Nutricionista"}! 👋
+            {getGreeting()}, {formatNutriGreeting(user?.name)}! 👋
           </h1>
           <p className="dashboard-subtitle">
             Acompanhe o desempenho do seu consultório e o acompanhamento dos seus pacientes.

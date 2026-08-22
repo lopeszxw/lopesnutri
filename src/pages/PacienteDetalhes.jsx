@@ -38,6 +38,7 @@ export default function PacienteDetalhes() {
 
   const [paciente, setPaciente] = useState(null);
   const [consultas, setConsultas] = useState([]);
+  const [planos, setPlanos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -79,6 +80,13 @@ export default function PacienteDetalhes() {
         ORDER BY data_consulta DESC, created_at DESC
       `;
       setConsultas(consultasRes || []);
+
+      const planosRes = await sql`
+        SELECT * FROM planos_alimentares 
+        WHERE paciente_id = ${id} 
+        ORDER BY created_at DESC
+      `;
+      setPlanos(planosRes || []);
     } catch (err) {
       console.error("Erro ao carregar paciente:", err);
       setError("Erro ao carregar dados do paciente.");
@@ -134,6 +142,11 @@ export default function PacienteDetalhes() {
 
     if (!newConsulta.data_consulta) {
       setConsultaError("Informe a data da consulta.");
+      return;
+    }
+
+    if (!newConsulta.peso || isNaN(parseFloat(newConsulta.peso))) {
+      setConsultaError("Informe o peso atual do paciente (campo obrigatório).");
       return;
     }
 
@@ -600,6 +613,60 @@ export default function PacienteDetalhes() {
               )}
             </div>
           </div>
+
+          {/* Seção de Planos Alimentares */}
+          <div className="profile-card">
+            <div className="card-header-flex">
+              <div className="profile-card-title" style={{ marginBottom: 0 }}>
+                <Utensils size={18} color="var(--primary)" />
+                <div>
+                  <h3>Planos Alimentares</h3>
+                  <span className="chart-subtitle">Prescrições e cardápios personalizados</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="btn-secondary-action btn-disabled-hint"
+                disabled
+                title="Módulo de geração de plano alimentar em desenvolvimento"
+              >
+                <Sparkles size={15} />
+                <span>Gerar Plano Alimentar</span>
+              </button>
+            </div>
+
+            <div className="planos-alimentares-container" style={{ marginTop: "1.25rem" }}>
+              {planos.length === 0 ? (
+                <div className="empty-state-box" style={{ padding: "2.25rem 1.5rem" }}>
+                  <Utensils size={36} className="empty-icon-muted" />
+                  <h4>Nenhum plano alimentar gerado ainda</h4>
+                  <p>
+                    Em breve você poderá prescrever e gerar cardápios personalizados diretamente para {paciente.nome}.
+                  </p>
+                </div>
+              ) : (
+                <div className="planos-list" style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
+                  {planos.map((plano, index) => (
+                    <div key={plano.id || index} className="plano-item-card">
+                      <div className="plano-header-row">
+                        <span className="plano-title">
+                          {plano.conteudo?.titulo || `Plano Alimentar #${planos.length - index}`}
+                        </span>
+                        <span className="plano-date-badge">
+                          <Calendar size={13} />
+                          {formatDate(plano.created_at)}
+                        </span>
+                      </div>
+                      {plano.conteudo?.descricao && (
+                        <p className="plano-desc">{plano.conteudo.descricao}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -704,7 +771,7 @@ export default function PacienteDetalhes() {
                 <div className="form-grid-2">
                   <div className="form-group-field">
                     <label htmlFor="modal_peso_c" className="form-label">
-                      Peso Atual (kg)
+                      Peso Atual (kg) <span className="required-star">*</span>
                     </label>
                     <div className="input-with-icon">
                       <Scale size={17} className="input-icon-left" />
@@ -714,6 +781,7 @@ export default function PacienteDetalhes() {
                         id="modal_peso_c"
                         className="styled-input-field"
                         placeholder="Ex: 68.4"
+                        required
                         value={newConsulta.peso}
                         onChange={(e) =>
                           setNewConsulta({ ...newConsulta, peso: e.target.value })

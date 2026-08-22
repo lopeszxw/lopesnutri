@@ -54,3 +54,23 @@ export const parsePgArray = (val) => {
   }
   return [];
 };
+
+/**
+ * Formata o nome do nutricionista para saudação evitando "Dra. !" ou repetições
+ */
+export const formatNutriGreeting = (rawName) => {
+  if (!rawName || typeof rawName !== "string") return "Nutricionista";
+  const clean = rawName.trim();
+  if (!clean) return "Nutricionista";
+
+  const parts = clean.split(/\s+/);
+
+  // Se já começa com Dr. / Dra. / Dr / Dra
+  if (/^dr\.?$/i.test(parts[0]) || /^dra\.?$/i.test(parts[0])) {
+    const title = /^dra/i.test(parts[0]) ? "Dra." : "Dr.";
+    const firstName = parts[1] || "";
+    return firstName ? `${title} ${firstName}` : "Nutricionista";
+  }
+
+  return parts[0] || "Nutricionista";
+};
