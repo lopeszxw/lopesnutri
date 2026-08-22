@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 import { sql } from "../db";
 import EvolucaoPesoChart from "../components/EvolucaoPesoChart";
-import { parsePgArray, formatDate, safeDateString } from "../utils/helpers";
+import { parsePgArray, formatDate, safeDateString, formatPhone } from "../utils/helpers";
 
 export default function PacienteDetalhes() {
   const { id } = useParams();
@@ -288,7 +288,7 @@ export default function PacienteDetalhes() {
                   className="contact-chip chip-whatsapp"
                 >
                   <MessageCircle size={14} />
-                  <span>{paciente.whatsapp}</span>
+                  <span>{formatPhone(paciente.whatsapp)}</span>
                 </a>
               )}
               <div className="contact-chip">

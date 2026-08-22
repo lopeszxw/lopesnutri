@@ -55,7 +55,7 @@ export default function Sidebar({ user, isOpen, onClose }) {
         {/* Sidebar Header with LopesNutri Logo */}
         <div className="sidebar-header">
           <div className="sidebar-logo-container">
-            <Logo size="sm" />
+            <Logo variant="horizontal" size="sm" forceTheme="dark" />
           </div>
           {onClose && (
             <button

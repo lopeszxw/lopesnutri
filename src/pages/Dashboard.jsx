@@ -261,8 +261,8 @@ export default function Dashboard() {
               <svg viewBox="0 0 190 38" style={{ width: "100%", height: "100%", overflow: "visible" }}>
                 <defs>
                   <linearGradient id="sparklineGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#2D4336" stopOpacity="0.25" />
-                    <stop offset="100%" stopColor="#2D4336" stopOpacity="0.0" />
+                    <stop offset="0%" stopColor="var(--text-main)" stopOpacity="0.18" />
+                    <stop offset="100%" stopColor="var(--text-main)" stopOpacity="0.0" />
                   </linearGradient>
                 </defs>
                 <path
@@ -272,11 +272,11 @@ export default function Dashboard() {
                 <path
                   d="M 5,30 Q 30,12 55,20 T 105,10 T 150,18 T 185,6"
                   fill="none"
-                  stroke="var(--primary)"
+                  stroke="var(--text-main)"
                   strokeWidth="2.2"
                   strokeLinecap="round"
                 />
-                <circle cx="185" cy="6" r="3.5" fill="var(--primary)" />
+                <circle cx="185" cy="6" r="3.5" fill="var(--text-main)" />
               </svg>
             </div>
           </div>

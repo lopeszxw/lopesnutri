@@ -61,7 +61,7 @@ export default function AuthLayout() {
 
       <div className="auth-card animate-fade-in">
         <header className="auth-header">
-          <Logo size="lg" />
+          <Logo variant="stacked" size="md" />
         </header>
         <Outlet />
       </div>
