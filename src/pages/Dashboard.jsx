@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import {
   Users,
@@ -8,12 +8,14 @@ import {
   UserPlus,
   RefreshCw,
   Sparkles,
-  ArrowUpRight,
+  ArrowRight,
   CalendarDays,
   Phone,
   Mail,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  HeartPulse,
+  FileText
 } from "lucide-react";
 import { sql } from "../db";
 import { formatDate, formatNutriGreeting } from "../utils/helpers";
@@ -99,6 +101,13 @@ export default function Dashboard() {
     }
   }, [user?.id]);
 
+  // Taxa de Adesão / Retenção Clínica
+  const taxaAdesao = useMemo(() => {
+    if (stats.totalPacientes === 0) return 100;
+    const emDia = Math.max(0, stats.totalPacientes - stats.pacientesSemRetorno.length);
+    return Math.round((emDia / stats.totalPacientes) * 100);
+  }, [stats.totalPacientes, stats.pacientesSemRetorno.length]);
+
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return "Bom dia";
@@ -112,14 +121,14 @@ export default function Dashboard() {
       <div className="dashboard-header">
         <div className="dashboard-header-left">
           <div className="greeting-badge">
-            <Sparkles size={15} />
-            <span>Painel LopesNutri</span>
+            <Sparkles size={14} />
+            <span>Painel Clínico LopesNutri</span>
           </div>
           <h1 className="dashboard-title">
             {getGreeting()}, {formatNutriGreeting(user?.name)}! 👋
           </h1>
           <p className="dashboard-subtitle">
-            Acompanhe o desempenho do seu consultório e o acompanhamento dos seus pacientes.
+            Visão geral do seu consultório, indicadores clínicos e retornos de pacientes.
           </p>
         </div>
 
@@ -130,13 +139,13 @@ export default function Dashboard() {
             disabled={loading || refreshing}
             title="Atualizar dados em tempo real"
           >
-            <RefreshCw size={16} className={refreshing ? "spin-animation" : ""} />
+            <RefreshCw size={15} className={refreshing ? "spin-animation" : ""} />
             <span>{refreshing ? "Atualizando..." : "Atualizar"}</span>
           </button>
 
-          <Link to="/pacientes" className="btn-primary-action">
-            <UserPlus size={18} />
-            <span>Gerenciar Pacientes</span>
+          <Link to="/pacientes/novo" className="btn-primary-action">
+            <UserPlus size={17} />
+            <span>Novo Paciente</span>
           </Link>
         </div>
       </div>
@@ -148,18 +157,18 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Grid of Main 3 Cards as specified in Prompt 3 */}
-      <div className="dashboard-main-grid">
-        {/* Card 1: Total de pacientes ativos */}
-        <div className="stat-card stat-card-primary">
-          <div className="stat-card-top">
-            <div className="stat-icon-wrapper icon-users">
-              <Users size={24} />
+      {/* Grid of 3 Top Clinical Metric Cards */}
+      <div className="dashboard-stats-grid">
+        {/* Card 1: Total de Pacientes Ativos */}
+        <div className="stat-card">
+          <div>
+            <div className="stat-card-top">
+              <div className="stat-icon-wrapper icon-users">
+                <Users size={22} />
+              </div>
+              <span className="stat-badge">Base Ativa</span>
             </div>
-            <span className="stat-badge">Total Ativos</span>
-          </div>
 
-          <div className="stat-card-body">
             <div className="stat-value-group">
               <h2 className="stat-number">
                 {loading ? <span className="skeleton-loader" /> : stats.totalPacientes}
@@ -167,28 +176,28 @@ export default function Dashboard() {
               <span className="stat-unit">pacientes</span>
             </div>
             <p className="stat-description">
-              Total de pacientes vinculados ao seu cadastro
+              Total de pacientes sob seus cuidados clínicos
             </p>
           </div>
 
           <div className="stat-card-footer">
             <Link to="/pacientes" className="stat-footer-link">
-              <span>Ver todos os pacientes</span>
-              <ArrowUpRight size={16} />
+              <span>Ver lista de pacientes</span>
+              <ArrowRight size={14} />
             </Link>
           </div>
         </div>
 
-        {/* Card 2: Consultas da semana */}
-        <div className="stat-card stat-card-accent">
-          <div className="stat-card-top">
-            <div className="stat-icon-wrapper icon-calendar">
-              <Calendar size={24} />
+        {/* Card 2: Consultas da Semana */}
+        <div className="stat-card">
+          <div>
+            <div className="stat-card-top">
+              <div className="stat-icon-wrapper icon-calendar">
+                <Calendar size={22} />
+              </div>
+              <span className="stat-badge badge-week">Agenda Semanal</span>
             </div>
-            <span className="stat-badge badge-week">Esta Semana</span>
-          </div>
 
-          <div className="stat-card-body">
             <div className="stat-value-group">
               <h2 className="stat-number">
                 {loading ? <span className="skeleton-loader" /> : stats.consultasSemana}
@@ -196,105 +205,181 @@ export default function Dashboard() {
               <span className="stat-unit">consultas</span>
             </div>
             <p className="stat-description">
-              Consultas registradas na semana corrente
+              Atendimentos clínicos agendados na semana corrente
             </p>
           </div>
 
           <div className="stat-card-footer">
             <div className="stat-footer-info">
-              <CalendarDays size={15} />
+              <CalendarDays size={14} />
               <span>Segunda a Domingo</span>
             </div>
           </div>
         </div>
 
-        {/* Card 3: Pacientes sem retorno */}
-        <div className="stat-card stat-card-alert span-full-card">
-          <div className="card-header-flex">
-            <div className="card-header-title-box">
-              <div className="stat-icon-wrapper icon-alert">
-                <ClockAlert size={22} />
+        {/* Card 3: Adesão & Retenção Clínica */}
+        <div className="stat-card">
+          <div>
+            <div className="stat-card-top">
+              <div className="stat-icon-wrapper icon-health">
+                <HeartPulse size={22} />
               </div>
-              <div>
-                <h3 className="card-title">Pacientes sem retorno</h3>
-                <p className="card-subtitle">
-                  Pacientes cuja última consulta foi há mais de 30 dias e sem retorno agendado
-                </p>
-              </div>
+              <span className="stat-badge badge-adhesion">Adesão Clínica</span>
             </div>
 
-            <div className="badge-count-warning">
-              {loading ? "..." : `${stats.pacientesSemRetorno.length} sem retorno`}
+            <div className="stat-value-group">
+              <h2 className="stat-number">
+                {loading ? <span className="skeleton-loader" /> : `${taxaAdesao}%`}
+              </h2>
+              <span className="stat-unit">em dia</span>
             </div>
+            <p className="stat-description">
+              {stats.totalPacientes > 0 && stats.pacientesSemRetorno.length > 0
+                ? `${Math.max(0, stats.totalPacientes - stats.pacientesSemRetorno.length)} de ${stats.totalPacientes} pacientes com retornos regulares`
+                : "Todos os pacientes em acompanhamento regular"}
+            </p>
           </div>
 
-          <div className="card-content-list-wrapper">
-            {loading ? (
-              <div className="skeleton-list">
-                <div className="skeleton-row" />
-                <div className="skeleton-row" />
-                <div className="skeleton-row" />
-              </div>
-            ) : stats.pacientesSemRetorno.length === 0 ? (
-              <div className="empty-state-box">
-                <div className="empty-icon-circle">
-                  <CheckCircle2 size={32} />
-                </div>
-                <h4 className="empty-title">Nenhum paciente sem retorno no momento</h4>
-                <p className="empty-desc">
-                  Parabéns! Todos os seus pacientes estão com consultas e retornos em dia.
-                </p>
-              </div>
-            ) : (
-              <div className="pacientes-sem-retorno-list">
-                {stats.pacientesSemRetorno.map((paciente) => (
-                  <Link
-                    key={paciente.id}
-                    to={`/pacientes/${paciente.id}`}
-                    className="paciente-sem-retorno-item"
-                    title={`Abrir perfil de ${paciente.nome}`}
-                  >
-                    <div className="paciente-info-col">
-                      <div className="paciente-avatar-sm">
-                        {paciente.nome ? paciente.nome.charAt(0).toUpperCase() : "P"}
-                      </div>
-                      <div className="paciente-text-group">
-                        <strong className="paciente-nome">{paciente.nome}</strong>
-                        <div className="paciente-subdetails">
-                          {paciente.email && (
-                            <span className="paciente-meta-item">
-                              <Mail size={13} /> {paciente.email}
-                            </span>
-                          )}
-                          {paciente.whatsapp && (
-                            <span className="paciente-meta-item">
-                              <Phone size={13} /> {paciente.whatsapp}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="paciente-status-col">
-                      <div className="consulta-timing-tag">
-                        <ClockAlert size={14} />
-                        <span>
-                          {paciente.ultima_consulta
-                            ? `Última consulta: ${formatDate(paciente.ultima_consulta)} (${paciente.dias_sem_consulta} dias)`
-                            : `Cadastrado há ${paciente.dias_sem_consulta} dias (sem consultas)`}
-                        </span>
-                      </div>
-                      <div className="action-hover-btn">
-                        <span>Ver Perfil</span>
-                        <ChevronRight size={16} />
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
+          <div className="stat-card-footer">
+            <div className="stat-footer-info">
+              <CheckCircle2 size={14} color="var(--primary)" />
+              <span>Indicador de retenção ativa</span>
+            </div>
           </div>
         </div>
+      </div>
+
+      {/* Seção de Alertas: Pacientes Sem Retorno */}
+      <div className="alert-card-section">
+        <div className="card-header-flex">
+          <div className="card-header-title-box">
+            <div className="stat-icon-wrapper icon-alert">
+              <ClockAlert size={20} />
+            </div>
+            <div>
+              <h3 className="card-title">Pacientes sem retorno recente</h3>
+              <p className="card-subtitle">
+                Pacientes cuja última consulta foi há mais de 30 dias e sem próximo retorno agendado
+              </p>
+            </div>
+          </div>
+
+          <div className="badge-count-warning">
+            {loading ? "..." : `${stats.pacientesSemRetorno.length} necessitam de contato`}
+          </div>
+        </div>
+
+        <div className="card-content-list-wrapper">
+          {loading ? (
+            <div className="skeleton-list">
+              <div className="skeleton-row" />
+              <div className="skeleton-row" />
+              <div className="skeleton-row" />
+            </div>
+          ) : stats.pacientesSemRetorno.length === 0 ? (
+            <div className="empty-state-box" style={{ padding: "2.5rem 1.5rem" }}>
+              <div className="empty-icon-circle">
+                <CheckCircle2 size={32} />
+              </div>
+              <h4 className="empty-title">Nenhum paciente sem retorno no momento</h4>
+              <p className="empty-desc">
+                Excelente trabalho! Todos os seus pacientes estão com consultas e retornos em dia.
+              </p>
+            </div>
+          ) : (
+            <div className="pacientes-sem-retorno-list">
+              {stats.pacientesSemRetorno.map((paciente) => (
+                <Link
+                  key={paciente.id}
+                  to={`/pacientes/${paciente.id}`}
+                  className="paciente-sem-retorno-item"
+                  title={`Abrir perfil de ${paciente.nome}`}
+                >
+                  <div className="paciente-info-col">
+                    <div className="paciente-avatar-sm">
+                      {paciente.nome ? paciente.nome.charAt(0).toUpperCase() : "P"}
+                    </div>
+                    <div className="paciente-text-group">
+                      <strong className="paciente-nome">{paciente.nome}</strong>
+                      <div className="paciente-subdetails">
+                        {paciente.email && (
+                          <span className="paciente-meta-item">
+                            <Mail size={12} /> {paciente.email}
+                          </span>
+                        )}
+                        {paciente.whatsapp && (
+                          <span className="paciente-meta-item">
+                            <Phone size={12} /> {paciente.whatsapp}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="paciente-status-col">
+                    <div className="consulta-timing-tag">
+                      <ClockAlert size={13} />
+                      <span>
+                        {paciente.ultima_consulta
+                          ? `Última consulta: ${formatDate(paciente.ultima_consulta)} (${paciente.dias_sem_consulta} dias)`
+                          : `Cadastrado há ${paciente.dias_sem_consulta} dias (sem consultas)`}
+                      </span>
+                    </div>
+                    <div className="action-hover-btn">
+                      <span>Ver Perfil</span>
+                      <ChevronRight size={15} />
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Feed / Acesso Rápido do Consultório */}
+      <div className="dashboard-shortcuts-grid">
+        <Link to="/pacientes/novo" className="shortcut-card">
+          <div className="shortcut-icon">
+            <UserPlus size={20} />
+          </div>
+          <div>
+            <h4 className="shortcut-title">
+              Cadastrar Paciente <ChevronRight size={14} />
+            </h4>
+            <p className="shortcut-desc">
+              Inicie uma nova ficha clínica com histórico, antropometria e anamnese completa.
+            </p>
+          </div>
+        </Link>
+
+        <Link to="/pacientes" className="shortcut-card">
+          <div className="shortcut-icon">
+            <Users size={20} />
+          </div>
+          <div>
+            <h4 className="shortcut-title">
+              Gestão de Pacientes <ChevronRight size={14} />
+            </h4>
+            <p className="shortcut-desc">
+              Consulte, filtre e gerencie todos os prontuários e contatos da sua base clínica.
+            </p>
+          </div>
+        </Link>
+
+        <Link to="/pacientes" className="shortcut-card">
+          <div className="shortcut-icon">
+            <FileText size={20} />
+          </div>
+          <div>
+            <h4 className="shortcut-title">
+              Evolução & Consultas <ChevronRight size={14} />
+            </h4>
+            <p className="shortcut-desc">
+              Acompanhe curvas de peso corporal, percentual de gordura e histórico de consultas.
+            </p>
+          </div>
+        </Link>
       </div>
     </div>
   );
