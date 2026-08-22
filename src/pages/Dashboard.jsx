@@ -346,8 +346,8 @@ export default function Dashboard() {
         <div className="bento-alerts-card">
           <div className="bento-card-header">
             <div className="bento-card-title-group">
-              <div className="stat-icon-wrapper" style={{ width: "36px", height: "36px", backgroundColor: "var(--error-bg)", color: "var(--error)" }}>
-                <ClockAlert size={18} />
+              <div className="bento-card-icon-circle warning">
+                <ClockAlert size={17} />
               </div>
               <div>
                 <h3 className="bento-card-title">Atenção Clínica & Retornos</h3>
@@ -421,8 +421,8 @@ export default function Dashboard() {
         <div className="bento-indicators-card">
           <div className="bento-card-header">
             <div className="bento-card-title-group">
-              <div className="stat-icon-wrapper" style={{ width: "36px", height: "36px", backgroundColor: "var(--primary-light)", color: "var(--primary)" }}>
-                <Target size={18} />
+              <div className="bento-card-icon-circle">
+                <Target size={17} />
               </div>
               <div>
                 <h3 className="bento-card-title">Foco & Indicadores da Base</h3>
