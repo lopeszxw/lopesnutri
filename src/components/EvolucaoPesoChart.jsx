@@ -6,66 +6,30 @@ import {
   Scale,
   Calendar,
   Sparkles,
-  Info,
-  ArrowRight
+  Info
 } from "lucide-react";
-import { safeDateString } from "../utils/helpers";
+import { safeDateString, formatDate } from "../utils/helpers";
 
-export default function EvolucaoPesoChart({ pesoInicial, dataCadastro, consultas = [] }) {
+export default function EvolucaoPesoChart({ consultas = [] }) {
   const [hoveredPoint, setHoveredPoint] = useState(null);
 
-  // 1. Construir lista cronológica de dados de peso
+  // 1. Construir lista cronológica de dados de peso estritamente a partir das consultas
   const timelineData = useMemo(() => {
-    const points = [];
-
-    // Ponto 0: Peso Inicial de Cadastro
-    const pInicialNum = parseFloat(pesoInicial);
-    if (!isNaN(pInicialNum) && pInicialNum > 0) {
-      points.push({
-        id: "inicial",
-        data: dataCadastro ? safeDateString(dataCadastro) : "Cadastro",
-        peso: pInicialNum,
-        label: "Peso Inicial (Cadastro)",
-        isInitial: true,
-        cintura: null,
-        gordura: null
-      });
-    }
-
-    // Pontos das consultas ordenadas cronologicamente
+    // Filtrar apenas consultas reais com peso válido e ordenar por data crescente
     const consultasComPeso = (consultas || [])
       .filter((c) => c && c.peso !== null && c.peso !== undefined && !isNaN(parseFloat(c.peso)))
       .sort((a, b) => new Date(a.data_consulta) - new Date(b.data_consulta));
 
-    consultasComPeso.forEach((c, index) => {
-      // Se a primeira consulta tiver a mesma data e peso do inicial, não duplicar ponto
-      const cDate = c.data_consulta ? safeDateString(c.data_consulta) : "";
-      const cPeso = parseFloat(c.peso);
-
-      if (
-        points.length === 1 &&
-        points[0].isInitial &&
-        points[0].data === cDate &&
-        points[0].peso === cPeso
-      ) {
-        points[0].cintura = c.cintura;
-        points[0].gordura = c.percentual_gordura;
-        return;
-      }
-
-      points.push({
-        id: c.id || `consulta-${index}`,
-        data: cDate,
-        peso: cPeso,
-        label: `Consulta ${index + 1}`,
-        isInitial: false,
-        cintura: c.cintura,
-        gordura: c.percentual_gordura
-      });
-    });
-
-    return points;
-  }, [pesoInicial, dataCadastro, consultas]);
+    return consultasComPeso.map((c, index) => ({
+      id: c.id || `consulta-${index}`,
+      data: c.data_consulta ? safeDateString(c.data_consulta) : "",
+      peso: parseFloat(c.peso),
+      label: `Consulta ${index + 1}`,
+      cintura: c.cintura,
+      quadril: c.quadril,
+      gordura: c.percentual_gordura
+    }));
+  }, [consultas]);
 
   // 2. Análise de métricas de evolução
   const metrics = useMemo(() => {
@@ -79,7 +43,26 @@ export default function EvolucaoPesoChart({ pesoInicial, dataCadastro, consultas
     const minWeight = Math.min(...timelineData.map((d) => d.peso));
     const maxWeight = Math.max(...timelineData.map((d) => d.peso));
 
-    let status = "Estável";
+    if (timelineData.length === 1) {
+      return {
+        firstWeight: firstWeight.toFixed(1),
+        latestWeight: latestWeight.toFixed(1),
+        diff: "0.0",
+        diffAbs: "0.0",
+        percentDiff: "0.0",
+        isLoss: false,
+        isGain: false,
+        isStable: true,
+        isSingle: true,
+        minWeight: minWeight.toFixed(1),
+        maxWeight: maxWeight.toFixed(1),
+        status: "Ponto de Partida",
+        statusClass: "neutral",
+        totalPoints: 1
+      };
+    }
+
+    let status = "Peso Estável";
     let statusClass = "neutral";
     if (diff < -0.2) {
       status = "Emagrecimento / Redução";
@@ -98,6 +81,7 @@ export default function EvolucaoPesoChart({ pesoInicial, dataCadastro, consultas
       isLoss: diff < -0.2,
       isGain: diff > 0.2,
       isStable: Math.abs(diff) <= 0.2,
+      isSingle: false,
       minWeight: minWeight.toFixed(1),
       maxWeight: maxWeight.toFixed(1),
       status,
@@ -121,7 +105,7 @@ export default function EvolucaoPesoChart({ pesoInicial, dataCadastro, consultas
     let minVal = Math.min(...pesos);
     let maxVal = Math.max(...pesos);
 
-    // Dar margem visual de 1kg a 2kg para a curva não encostar nos limites
+    // Margem visual para o gráfico
     if (minVal === maxVal) {
       minVal -= 2;
       maxVal += 2;
@@ -147,21 +131,26 @@ export default function EvolucaoPesoChart({ pesoInicial, dataCadastro, consultas
       y: getY(d.peso)
     }));
 
-    // Construção de Caminho SVG (Line path e Area gradient path)
-    const linePath = coordinates.reduce((acc, pt, i) => {
-      return i === 0 ? `M ${pt.x} ${pt.y}` : `${acc} L ${pt.x} ${pt.y}`;
-    }, "");
+    // Se tiver 2 ou mais registros, traçar linha e área. Caso contrário (1 ponto), manter vazios
+    let linePath = "";
+    let areaPath = "";
 
-    const firstPt = coordinates[0];
-    const lastPt = coordinates[coordinates.length - 1];
-    const bottomY = padding.top + plotHeight;
+    if (timelineData.length >= 2) {
+      linePath = coordinates.reduce((acc, pt, i) => {
+        return i === 0 ? `M ${pt.x} ${pt.y}` : `${acc} L ${pt.x} ${pt.y}`;
+      }, "");
 
-    const areaPath = `
-      ${linePath} 
-      L ${lastPt.x} ${bottomY} 
-      L ${firstPt.x} ${bottomY} 
-      Z
-    `;
+      const firstPt = coordinates[0];
+      const lastPt = coordinates[coordinates.length - 1];
+      const bottomY = padding.top + plotHeight;
+
+      areaPath = `
+        ${linePath} 
+        L ${lastPt.x} ${bottomY} 
+        L ${firstPt.x} ${bottomY} 
+        Z
+      `;
+    }
 
     // 4 Linhas de Grade Horizontais
     const gridLines = [];
@@ -186,35 +175,27 @@ export default function EvolucaoPesoChart({ pesoInicial, dataCadastro, consultas
     };
   }, [timelineData]);
 
-  const formatDate = (dateStr) => {
-    if (!dateStr || dateStr === "Cadastro") return "Início";
-    try {
-      if (typeof dateStr === "string" && dateStr.includes("-")) {
-        const parts = dateStr.split("-");
-        if (parts.length === 3) {
-          return `${parts[2]}/${parts[1]}`;
-        }
-      }
-      const d = new Date(dateStr);
-      if (!isNaN(d.getTime())) {
-        return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
-      }
-      return String(dateStr);
-    } catch {
-      return String(dateStr);
-    }
-  };
-
+  // Caso 0: Nenhuma consulta registrada
   if (!metrics || timelineData.length === 0) {
     return (
       <div className="profile-card chart-card-wrapper">
         <div className="profile-card-title">
           <Scale size={18} color="var(--primary)" />
-          <h3>Evolução de Peso & Composição</h3>
+          <div>
+            <h3>Evolução do Peso Corporal</h3>
+            <span className="chart-subtitle">
+              Acompanhamento cronológico de emagrecimento e ganho de massa
+            </span>
+          </div>
         </div>
-        <div className="empty-chart-box">
-          <Scale size={32} className="empty-icon-muted" />
-          <p>Nenhum dado de peso registrado para gerar o gráfico de evolução.</p>
+        <div className="empty-chart-box" style={{ padding: "3rem 1.5rem", textAlign: "center" }}>
+          <Scale size={36} className="empty-icon-muted" style={{ margin: "0 auto" }} />
+          <h4 style={{ margin: "0.75rem 0 0.35rem", color: "var(--text-main)", fontSize: "1.05rem" }}>
+            Nenhuma consulta registrada ainda
+          </h4>
+          <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>
+            Realize a primeira consulta para iniciar a curva de evolução antropométrica do paciente.
+          </p>
         </div>
       </div>
     );
@@ -240,9 +221,10 @@ export default function EvolucaoPesoChart({ pesoInicial, dataCadastro, consultas
           {metrics.isGain && <TrendingUp size={17} />}
           {metrics.isStable && <Minus size={17} />}
           <span>
-            {metrics.isLoss && `Redução de ${metrics.diffAbs} kg (-${metrics.percentDiff}%)`}
-            {metrics.isGain && `Aumento de +${metrics.diffAbs} kg (+${metrics.percentDiff}%)`}
-            {metrics.isStable && `Peso Estável (Variação de ${metrics.diff} kg)`}
+            {metrics.isSingle && `1ª Consulta (Peso: ${metrics.latestWeight} kg)`}
+            {!metrics.isSingle && metrics.isLoss && `Redução de ${metrics.diffAbs} kg (-${metrics.percentDiff}%)`}
+            {!metrics.isSingle && metrics.isGain && `Aumento de +${metrics.diffAbs} kg (+${metrics.percentDiff}%)`}
+            {!metrics.isSingle && metrics.isStable && `Peso Estável (Variação de ${metrics.diff} kg)`}
           </span>
         </div>
       </div>
@@ -266,7 +248,7 @@ export default function EvolucaoPesoChart({ pesoInicial, dataCadastro, consultas
               metrics.isLoss ? "success-text" : metrics.isGain ? "info-text" : ""
             }`}
           >
-            {metrics.diff > 0 ? `+${metrics.diff}` : metrics.diff} kg
+            {metrics.isSingle ? "0.0 kg" : (parseFloat(metrics.diff) > 0 ? `+${metrics.diff}` : metrics.diff) + " kg"}
           </strong>
         </div>
 
@@ -336,22 +318,26 @@ export default function EvolucaoPesoChart({ pesoInicial, dataCadastro, consultas
               </g>
             ))}
 
-            {/* Área sob a Curva com Gradiente */}
-            <path
-              d={chartConfig.areaPath}
-              fill={metrics.isLoss ? "url(#weightLossGradient)" : "url(#weightGainGradient)"}
-            />
+            {/* Área sob a Curva com Gradiente (apenas se houver 2 ou mais consultas) */}
+            {chartConfig.areaPath && (
+              <path
+                d={chartConfig.areaPath}
+                fill={metrics.isLoss ? "url(#weightLossGradient)" : "url(#weightGainGradient)"}
+              />
+            )}
 
-            {/* Linha Principal da Curva */}
-            <path
-              d={chartConfig.linePath}
-              fill="none"
-              stroke={metrics.isLoss ? "var(--primary)" : "#0284c7"}
-              strokeWidth="3.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              filter="url(#glowShadow)"
-            />
+            {/* Linha Principal da Curva (apenas se houver 2 ou mais consultas) */}
+            {chartConfig.linePath && (
+              <path
+                d={chartConfig.linePath}
+                fill="none"
+                stroke={metrics.isLoss ? "var(--primary)" : "#0284c7"}
+                strokeWidth="3.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                filter="url(#glowShadow)"
+              />
+            )}
 
             {/* Eixo X: Rótulos de Datas */}
             {chartConfig.coordinates.map((pt, idx) => (
@@ -381,13 +367,13 @@ export default function EvolucaoPesoChart({ pesoInicial, dataCadastro, consultas
                   onMouseLeave={() => setHoveredPoint(null)}
                   style={{ cursor: "pointer" }}
                 >
-                  {/* Círculo de Pulse no Ponto Atual */}
-                  {isLast && (
+                  {/* Círculo de Pulse no Ponto Atual / Único */}
+                  {(isLast || metrics.isSingle) && (
                     <circle
                       cx={pt.x}
                       cy={pt.y}
                       r="10"
-                      fill={metrics.isLoss ? "var(--primary)" : "#0284c7"}
+                      fill="var(--primary)"
                       opacity="0.25"
                       className="pulse-circle"
                     />
@@ -399,13 +385,13 @@ export default function EvolucaoPesoChart({ pesoInicial, dataCadastro, consultas
                     cy={pt.y}
                     r={isHovered ? "7" : isLast ? "6" : "4.5"}
                     fill="var(--surface)"
-                    stroke={metrics.isLoss ? "var(--primary)" : "#0284c7"}
+                    stroke="var(--primary)"
                     strokeWidth={isHovered ? "3.5" : "2.5"}
                     style={{ transition: "all 0.2s ease" }}
                   />
 
                   {/* Valor acima do ponto se hover ou último */}
-                  {(isHovered || isLast) && (
+                  {(isHovered || isLast || metrics.isSingle) && (
                     <g transform={`translate(${pt.x}, ${pt.y - 12})`}>
                       <rect
                         x="-24"
@@ -446,7 +432,7 @@ export default function EvolucaoPesoChart({ pesoInicial, dataCadastro, consultas
           >
             <div className="tooltip-header">
               <Calendar size={12} />
-              <span>{hoveredPoint.data}</span>
+              <span>{formatDate(hoveredPoint.data)}</span>
               <strong>{hoveredPoint.label}</strong>
             </div>
             <div className="tooltip-body">
@@ -458,6 +444,12 @@ export default function EvolucaoPesoChart({ pesoInicial, dataCadastro, consultas
                 <div className="tooltip-row">
                   <span>Cintura:</span>
                   <strong>{hoveredPoint.cintura} cm</strong>
+                </div>
+              )}
+              {hoveredPoint.quadril && (
+                <div className="tooltip-row">
+                  <span>Quadril:</span>
+                  <strong>{hoveredPoint.quadril} cm</strong>
                 </div>
               )}
               {hoveredPoint.gordura && (
@@ -475,9 +467,9 @@ export default function EvolucaoPesoChart({ pesoInicial, dataCadastro, consultas
       <div className="chart-footer-note">
         <Sparkles size={14} color="var(--primary)" />
         <span>
-          {timelineData.length > 1
-            ? `Curva calculada a partir de ${timelineData.length} registros antropométricos.`
-            : "Cadastre novas consultas e evoluções para acompanhar a curva gráfica completa ao longo do tempo."}
+          {timelineData.length === 1
+            ? "1 registro antropométrico registrado. A curva de tendência será traçada a partir da 2ª consulta."
+            : `Curva calculada a partir de ${timelineData.length} consultas antropométricas.`}
         </span>
       </div>
     </div>

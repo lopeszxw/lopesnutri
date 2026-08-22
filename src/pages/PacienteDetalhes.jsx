@@ -337,11 +337,7 @@ export default function PacienteDetalhes() {
       </div>
 
       {/* Gráfico de Evolução do Peso do Paciente (Emagrecimento / Aumento) */}
-      <EvolucaoPesoChart
-        pesoInicial={paciente.peso_inicial}
-        dataCadastro={paciente.created_at}
-        consultas={consultas}
-      />
+      <EvolucaoPesoChart consultas={consultas} />
 
       {/* Main 2-Column Content */}
       <div className="profile-grid-layout">
