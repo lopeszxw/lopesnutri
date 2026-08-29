@@ -4958,38 +4958,51 @@ button {
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.15s ease;
+  transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.12s ease;
 }
 
-/* Setas Indicadoras Dinâmicas */
-.chart-tooltip-bubble::after {
+/* Quando o nó está na metade direita da tela: o balão flutua totalmente à ESQUERDA do ponto */
+.chart-tooltip-bubble.dock-left {
+  transform: translate(calc(-100% - 18px), -50%);
+}
+
+.chart-tooltip-bubble.dock-left::after {
   content: '';
   position: absolute;
-  bottom: -6px;
-  left: 50%;
-  transform: translateX(-50%) rotate(45deg);
+  right: -6px;
+  top: 50%;
+  left: auto;
+  bottom: auto;
+  transform: translateY(-50%) rotate(45deg);
   width: 11px;
   height: 11px;
   background: var(--surface);
   border-right: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-}
-
-.chart-tooltip-bubble.arrow-right::after {
-  left: 88%;
-}
-
-.chart-tooltip-bubble.arrow-left::after {
-  left: 12%;
-}
-
-.chart-tooltip-bubble.tooltip-flipped::after {
-  bottom: auto;
-  top: -6px;
-  border-right: none;
-  border-bottom: none;
-  border-left: 1px solid var(--border);
   border-top: 1px solid var(--border);
+  border-left: none;
+  border-bottom: none;
+}
+
+/* Quando o nó está na metade esquerda da tela: o balão flutua totalmente à DIREITA do ponto */
+.chart-tooltip-bubble.dock-right {
+  transform: translate(18px, -50%);
+}
+
+.chart-tooltip-bubble.dock-right::after {
+  content: '';
+  position: absolute;
+  left: -6px;
+  top: 50%;
+  right: auto;
+  bottom: auto;
+  transform: translateY(-50%) rotate(45deg);
+  width: 11px;
+  height: 11px;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  border-right: none;
+  border-top: none;
 }
 
 .tooltip-header {

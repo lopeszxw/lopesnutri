@@ -8,39 +8,57 @@ import {
   Sparkles,
   Target,
   Activity,
-  Flame,
-  CheckCircle2
+  Flame
 } from "lucide-react";
 import { safeDateString, formatDate } from "../utils/helpers";
 
 /**
- * Gera curva Bézier ultra-suave (Spline) passando pelos pontos
+ * Interpolação Cúbica Monotônica (Fritsch-Carlson)
+ * Garante curvas suaves, naturais e sem distorções/ondulações artificiais.
  */
-function getSmoothPath(coordinates) {
-  if (!coordinates || coordinates.length === 0) return "";
-  if (coordinates.length === 1) return `M ${coordinates[0].x} ${coordinates[0].y}`;
+function getMonotoneSplinePath(points) {
+  if (!points || points.length === 0) return "";
+  if (points.length === 1) return `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
   
-  if (coordinates.length === 2) {
-    const [p0, p1] = coordinates;
+  if (points.length === 2) {
+    const [p0, p1] = points;
     const dx = p1.x - p0.x;
-    return `M ${p0.x} ${p0.y} C ${p0.x + dx * 0.4} ${p0.y}, ${p1.x - dx * 0.4} ${p1.y}, ${p1.x} ${p1.y}`;
+    return `M ${p0.x.toFixed(1)} ${p0.y.toFixed(1)} C ${(p0.x + dx * 0.35).toFixed(1)} ${p0.y.toFixed(1)}, ${(p1.x - dx * 0.35).toFixed(1)} ${p1.y.toFixed(1)}, ${p1.x.toFixed(1)} ${p1.y.toFixed(1)}`;
   }
 
-  let d = `M ${coordinates[0].x} ${coordinates[0].y}`;
-  for (let i = 0; i < coordinates.length - 1; i++) {
-    const p0 = coordinates[i === 0 ? 0 : i - 1];
-    const p1 = coordinates[i];
-    const p2 = coordinates[i + 1];
-    const p3 = coordinates[i + 2 < coordinates.length ? i + 2 : i + 1];
+  const n = points.length;
+  const d = [];
+  const m = [];
 
-    const cp1x = p1.x + (p2.x - p0.x) / 6;
-    const cp1y = p1.y + (p2.y - p0.y) / 6;
-    const cp2x = p2.x - (p3.x - p1.x) / 6;
-    const cp2y = p2.y - (p3.y - p1.y) / 6;
-
-    d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+  for (let i = 0; i < n - 1; i++) {
+    const dx = points[i + 1].x - points[i].x;
+    const dy = points[i + 1].y - points[i].y;
+    d.push(dx === 0 ? 0 : dy / dx);
   }
-  return d;
+
+  m.push(d[0]);
+  for (let i = 1; i < n - 1; i++) {
+    if (d[i - 1] * d[i] <= 0) {
+      m.push(0);
+    } else {
+      m.push((d[i - 1] + d[i]) / 2);
+    }
+  }
+  m.push(d[n - 2]);
+
+  let path = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+  for (let i = 0; i < n - 1; i++) {
+    const p0 = points[i];
+    const p1 = points[i + 1];
+    const dx = (p1.x - p0.x) / 3;
+    const cp1x = p0.x + dx;
+    const cp1y = p0.y + m[i] * dx;
+    const cp2x = p1.x - dx;
+    const cp2y = p1.y - m[i + 1] * dx;
+
+    path += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p1.x.toFixed(1)} ${p1.y.toFixed(1)}`;
+  }
+  return path;
 }
 
 export default function EvolucaoPesoChart({ consultas = [] }) {
@@ -56,7 +74,8 @@ export default function EvolucaoPesoChart({ consultas = [] }) {
       id: c.id || `consulta-${index}`,
       data: c.data_consulta ? safeDateString(c.data_consulta) : "",
       peso: parseFloat(c.peso),
-      label: `Consulta ${index + 1}`,
+      consultaIndex: index + 1,
+      label: `Consulta #${index + 1}`,
       cintura: c.cintura,
       quadril: c.quadril,
       gordura: c.percentual_gordura
@@ -97,7 +116,7 @@ export default function EvolucaoPesoChart({ consultas = [] }) {
     let status = "Peso Estável";
     let statusClass = "neutral";
     if (diff < -0.2) {
-      status = "Emagrecimento Saudável";
+      status = "Emagrecimento / Redução";
       statusClass = "loss";
     } else if (diff > 0.2) {
       status = "Ganho de Peso / Massa";
@@ -126,9 +145,9 @@ export default function EvolucaoPesoChart({ consultas = [] }) {
   const chartConfig = useMemo(() => {
     if (timelineData.length === 0) return null;
 
-    const width = 740;
+    const width = 760;
     const height = 240;
-    const padding = { top: 30, right: 45, bottom: 40, left: 60 };
+    const padding = { top: 35, right: 60, bottom: 45, left: 60 };
 
     const plotWidth = width - padding.left - padding.right;
     const plotHeight = height - padding.top - padding.bottom;
@@ -142,8 +161,8 @@ export default function EvolucaoPesoChart({ consultas = [] }) {
       maxVal += 2;
     } else {
       const range = maxVal - minVal;
-      minVal -= range * 0.2;
-      maxVal += range * 0.2;
+      minVal -= range * 0.18;
+      maxVal += range * 0.18;
     }
 
     const getX = (index) => {
@@ -166,7 +185,7 @@ export default function EvolucaoPesoChart({ consultas = [] }) {
     let areaPath = "";
 
     if (timelineData.length >= 2) {
-      linePath = getSmoothPath(coordinates);
+      linePath = getMonotoneSplinePath(coordinates);
 
       const firstPt = coordinates[0];
       const lastPt = coordinates[coordinates.length - 1];
@@ -174,13 +193,13 @@ export default function EvolucaoPesoChart({ consultas = [] }) {
 
       areaPath = `
         ${linePath} 
-        L ${lastPt.x} ${bottomY} 
-        L ${firstPt.x} ${bottomY} 
+        L ${lastPt.x.toFixed(1)} ${bottomY} 
+        L ${firstPt.x.toFixed(1)} ${bottomY} 
         Z
       `;
     }
 
-    // Linhas de Grade Y (4 linhas niveladas)
+    // Linhas de Grade Y
     const gridCount = 4;
     const gridLines = [];
     for (let i = 0; i <= gridCount; i++) {
@@ -202,38 +221,6 @@ export default function EvolucaoPesoChart({ consultas = [] }) {
       bottomY: padding.top + plotHeight
     };
   }, [timelineData]);
-
-  // 4. Posicionamento Inteligente do Tooltip (nunca vaza da tela / nunca corta)
-  const tooltipStyle = useMemo(() => {
-    if (!hoveredPoint || !chartConfig) return null;
-    const xPct = (hoveredPoint.x / chartConfig.width) * 100;
-    const yPct = (hoveredPoint.y / chartConfig.height) * 100;
-
-    let transformX = "-50%";
-    let arrowAlign = "center";
-    if (xPct > 70) {
-      transformX = "-88%";
-      arrowAlign = "right";
-    } else if (xPct < 30) {
-      transformX = "-12%";
-      arrowAlign = "left";
-    }
-
-    let transformY = "calc(-100% - 15px)";
-    let isFlippedBottom = false;
-    if (yPct < 35) {
-      transformY = "18px";
-      isFlippedBottom = true;
-    }
-
-    return {
-      left: `${xPct}%`,
-      top: `${yPct}%`,
-      transform: `translate(${transformX}, ${transformY})`,
-      arrowAlign,
-      isFlippedBottom
-    };
-  }, [hoveredPoint, chartConfig]);
 
   if (!metrics || timelineData.length === 0) {
     return (
@@ -352,33 +339,33 @@ export default function EvolucaoPesoChart({ consultas = [] }) {
             preserveAspectRatio="xMidYMid meet"
           >
             <defs>
-              {/* Gradiente Suave Esmeralda / Verde */}
+              {/* Gradiente Suave Esmeralda */}
               <linearGradient id="glowAreaEmerald" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#10b981" stopOpacity="0.28" />
-                <stop offset="60%" stopColor="#10b981" stopOpacity="0.08" />
+                <stop offset="0%" stopColor="#10b981" stopOpacity="0.22" />
+                <stop offset="70%" stopColor="#10b981" stopOpacity="0.04" />
                 <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
               </linearGradient>
 
-              {/* Gradiente Suave Safira / Azul */}
+              {/* Gradiente Suave Safira */}
               <linearGradient id="glowAreaBlue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.28" />
-                <stop offset="60%" stopColor="#3b82f6" stopOpacity="0.08" />
+                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.22" />
+                <stop offset="70%" stopColor="#3b82f6" stopOpacity="0.04" />
                 <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.0" />
               </linearGradient>
 
-              {/* Gradiente Neutro Elegante */}
+              {/* Gradiente Neutro */}
               <linearGradient id="glowAreaNeutral" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.25" />
+                <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.2" />
                 <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.0" />
               </linearGradient>
 
-              {/* Filtro de Sombra Suave para a Linha */}
+              {/* Sombra Suave para a Linha */}
               <filter id="softGlowLine" x="-20%" y="-20%" width="140%" height="140%">
                 <feDropShadow
                   dx="0"
-                  dy="4"
-                  stdDeviation="3.5"
-                  floodColor={isLossTheme ? "rgba(16, 185, 129, 0.45)" : isGainTheme ? "rgba(59, 130, 246, 0.45)" : "rgba(0, 0, 0, 0.15)"}
+                  dy="3"
+                  stdDeviation="3"
+                  floodColor={isLossTheme ? "rgba(16, 185, 129, 0.35)" : isGainTheme ? "rgba(59, 130, 246, 0.35)" : "rgba(0, 0, 0, 0.12)"}
                 />
               </filter>
             </defs>
@@ -394,7 +381,7 @@ export default function EvolucaoPesoChart({ consultas = [] }) {
                   stroke="var(--border)"
                   strokeDasharray="4 4"
                   strokeWidth="1"
-                  opacity="0.6"
+                  opacity="0.5"
                 />
                 <text
                   x={chartConfig.padding.left - 12}
@@ -409,7 +396,7 @@ export default function EvolucaoPesoChart({ consultas = [] }) {
               </g>
             ))}
 
-            {/* Área sob a Curva com Gradiente Suave */}
+            {/* Área sob a Curva com Gradiente */}
             {chartConfig.areaPath && (
               <path
                 d={chartConfig.areaPath}
@@ -427,11 +414,11 @@ export default function EvolucaoPesoChart({ consultas = [] }) {
                 stroke={mainStrokeColor}
                 strokeDasharray="3 3"
                 strokeWidth="1.5"
-                opacity="0.5"
+                opacity="0.6"
               />
             )}
 
-            {/* Linha Curva Principal Fluida */}
+            {/* Linha Curva Fluida Monotônica */}
             {chartConfig.linePath && (
               <path
                 d={chartConfig.linePath}
@@ -445,19 +432,29 @@ export default function EvolucaoPesoChart({ consultas = [] }) {
             )}
 
             {/* Eixo X: Rótulos de Datas */}
-            {chartConfig.coordinates.map((pt, idx) => (
-              <text
-                key={idx}
-                x={pt.x}
-                y={chartConfig.height - 12}
-                textAnchor="middle"
-                fontSize="11"
-                fontWeight="700"
-                fill={hoveredPoint?.id === pt.id ? "var(--text-main)" : "var(--text-muted)"}
-              >
-                {formatDate(pt.data)}
-              </text>
-            ))}
+            {chartConfig.coordinates.map((pt, idx) => {
+              // Se houver consultas com datas idênticas, inclui o índice da consulta para clareza
+              const isDuplicateDate = chartConfig.coordinates.some(
+                (other, otherIdx) => otherIdx !== idx && other.data === pt.data
+              );
+              const labelDate = isDuplicateDate
+                ? `${formatDate(pt.data)} (#${pt.consultaIndex})`
+                : formatDate(pt.data);
+
+              return (
+                <text
+                  key={idx}
+                  x={pt.x}
+                  y={chartConfig.height - 12}
+                  textAnchor="middle"
+                  fontSize="11"
+                  fontWeight="700"
+                  fill={hoveredPoint?.id === pt.id ? "var(--text-main)" : "var(--text-muted)"}
+                >
+                  {labelDate}
+                </text>
+              );
+            })}
 
             {/* Pontos Interativos (Nodes) */}
             {chartConfig.coordinates.map((pt, idx) => {
@@ -476,7 +473,7 @@ export default function EvolucaoPesoChart({ consultas = [] }) {
                   <circle
                     cx={pt.x}
                     cy={pt.y}
-                    r="22"
+                    r="24"
                     fill="transparent"
                     pointerEvents="all"
                   />
@@ -514,7 +511,7 @@ export default function EvolucaoPesoChart({ consultas = [] }) {
                     />
                   )}
 
-                  {/* Rótulo Estático Flutuante (exibido apenas quando NÃO estiver em hover) */}
+                  {/* Rótulo Estático Flutuante (apenas se NÃO hover) */}
                   {!isHovered && (isLast || metrics.isSingle) && (
                     <g transform={`translate(${pt.x}, ${pt.y - 14})`}>
                       <rect
@@ -545,16 +542,15 @@ export default function EvolucaoPesoChart({ consultas = [] }) {
           </svg>
         )}
 
-        {/* Tooltip Dinâmico Informativo com Posicionamento Anti-Corte */}
-        {hoveredPoint && tooltipStyle && (
+        {/* Tooltip Dinâmico Informativo Anti-Corte (Posicionamento Lateral Inteligente) */}
+        {hoveredPoint && chartConfig && (
           <div
             className={`chart-tooltip-bubble animate-fade-in ${
-              tooltipStyle.isFlippedBottom ? "tooltip-flipped" : ""
-            } arrow-${tooltipStyle.arrowAlign}`}
+              hoveredPoint.x > chartConfig.width * 0.52 ? "dock-left" : "dock-right"
+            }`}
             style={{
-              left: tooltipStyle.left,
-              top: tooltipStyle.top,
-              transform: tooltipStyle.transform
+              left: `${(hoveredPoint.x / chartConfig.width) * 100}%`,
+              top: `${(hoveredPoint.y / chartConfig.height) * 100}%`
             }}
           >
             <div className="tooltip-header">
