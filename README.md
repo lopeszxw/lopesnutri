@@ -1,11 +1,12 @@
-# 🥗 LopesNutri — Sistema de Gestão Nutricional & Clínica
+# 🥗 LopesNutri — Sistema de Gestão Nutricional & Inteligência Clínica
 
 <div align="center">
-  <img src="public/logo.png" alt="LopesNutri Logo" width="200" />
-  <p><strong>Plataforma clínica moderna, editorial e em tempo real para nutricionistas gerenciarem prontuários, consultas, indicadores de retenção e evolução antropométrica.</strong></p>
+  <img src="public/logo.png" alt="LopesNutri Logo" width="220" />
+  <p><strong>Plataforma clínica moderna, editorial e em tempo real para nutricionistas gerenciarem prontuários, planos alimentares com Inteligência Artificial, mapeamento antropométrico em silhueta corporal e gráficos de evolução.</strong></p>
 
   [![Vite](https://img.shields.io/badge/Vite-8.1-646CFF?style=flat&logo=vite&logoColor=white)](https://vitejs.dev/)
   [![React](https://img.shields.io/badge/React-19.2-61DAFB?style=flat&logo=react&logoColor=black)](https://react.dev/)
+  [![Google Gemini AI](https://img.shields.io/badge/Google_Gemini-IA_Flash-8E75FF?style=flat&logo=google&logoColor=white)](https://ai.google.dev/)
   [![Neon PostgreSQL](https://img.shields.io/badge/Neon-PostgreSQL-00E599?style=flat&logo=postgresql&logoColor=white)](https://neon.tech/)
   [![Vercel](https://img.shields.io/badge/Deploy-Vercel-000000?style=flat&logo=vercel&logoColor=white)](https://vercel.com/)
   [![License](https://img.shields.io/badge/License-MIT-2d4336?style=flat)](LICENSE)
@@ -17,7 +18,7 @@
 
 O **LopesNutri** é um ecossistema clínico desenvolvido para proporcionar uma experiência profissional sofisticada e humanizada para nutricionistas e consultórios. 
 
-Combinando um design no estilo **Bento Grid Editorial**, tipografia serifada moderna (*Newsreader*) e um banco de dados serverless **Neon PostgreSQL**, a plataforma oferece acompanhamento clínico completo em tempo real: desde o cálculo de métricas antropométricas e gráficos de evolução do peso até o controle de retenção de pacientes e prescrição de planos alimentares.
+Combinando um design no estilo **Bento Grid Editorial**, tipografia serifada moderna (*Newsreader*), banco de dados serverless **Neon PostgreSQL** e **Google Gemini IA**, a plataforma oferece acompanhamento clínico completo em tempo real: desde a anamnese e gráficos de evolução até a silhueta corporal interativa e a prescrição automática de dietas semanais.
 
 ---
 
@@ -42,17 +43,50 @@ Combinando um design no estilo **Bento Grid Editorial**, tipografia serifada mod
 
 ---
 
-### 2. 📈 Gráfico de Evolução Antropométrica (SVG Dinâmico)
-- Card de acompanhamento cronológico do peso corporal com **renderização matemática pura em SVG**:
-  - **Caso 0 consultas**: *Empty state* limpo orientando o início do acompanhamento.
-  - **Caso 1 consulta**: Ponto único centralizado com indicação de ponto de partida (`0.0 kg`), sem linhas horizontais falsas.
-  - **Caso 2+ consultas**: Curva de tendência cronológica conectando todas as consultas registradas, área sombreada com gradiente e cálculo de variação total ($\Delta$ kg).
-- **Tooltips Interativos**: Ao passar o cursor sobre qualquer ponto da curva, exibe detalhes como Data, Peso, Circunferência da Cintura, Quadril e % de Gordura.
-- **Header de Métricas**: Indicadores rápidos de *Peso Inicial*, *Peso Atual*, *Variação Total* e *Mínimo / Máximo Registrado*.
+### 2. 🤖 Geração de Planos Alimentares com Inteligência Artificial (Gemini)
+- **Geração Automática de Dietas Semanais**:
+  - Integração com **Google Generative AI (`gemini-3.6-flash`)** através de Serverless Function segura em `/api/gerar-plano`.
+  - Análise profunda do prontuário: idade, peso, altura, restrições alimentares, alergias, rotina de sono, hidratação e metas clínicas.
+  - Estrutura completa de **7 dias (Segunda a Domingo)** com **5 refeições diárias** (*Café da Manhã, Lanche da Manhã, Almoço, Lanche da Tarde e Jantar*), contendo múltiplas opções substituíveis.
+- **Editor Interativo & Histórico de Planos**:
+  - Edição direta de cada refeição, adição de novos itens, exclusão e cópia rápida de dias.
+  - Histórico cronológico de planos alimentares salvos no PostgreSQL com opção de reativação.
+- **Exportação & Impressão de PDF Clínico Limpo**:
+  - Template de impressão exclusivo que oculta 100% da interface do site, menus e botões.
+  - Gera um documento de receituário médico elegante com cabeçalho oficial LopesNutri, metas de hidratação, cardápio semanal completo e linha de assinatura/CRN.
 
 ---
 
-### 3. 👤 Prontuário Completo do Paciente (`/pacientes/:id`)
+### 3. 🧍 Mapeamento Antropométrico & Silhueta Corporal
+- **Silhueta Anatômica Oficial em Alta Definição**:
+  - Renderização vetorial em alta definição adaptada automaticamente ao sexo cadastrado do paciente (*Masculino* ou *Feminino*).
+  - Iluminação suave com efeito *ambient glow* compatível com Light e Dark Mode.
+- **Pontos Anatômicos Interativos (Hotspots)**:
+  - Mapeamento preciso de circunferências:
+    - 📏 **Tórax / Peitoral** (cm)
+    - 📏 **Braço / Bíceps** (cm)
+    - 📏 **Cintura / Abdômen** (cm)
+    - 📏 **Quadril** (cm)
+    - 📏 **Coxa** (cm)
+    - 📏 **Panturrilha** (cm)
+- **Comparador Evolutivo & Edição em Tempo Real**:
+  - Seletor de consultas (`C1`, `C2`... `Cn`) para comparar a evolução de cada medida em relação à primeira consulta (base).
+  - Botão **✏️ Editar Medidas** para alteração rápida dos perímetros corporais com sincronização instantânea no banco de dados.
+
+---
+
+### 4. 📈 Gráfico de Evolução Antropométrica (SVG Monotone Spline)
+- **Interpolação Cúbica Monotônica (Fritsch-Carlson)**:
+  - Traçado em curva fluida natural sem ondulações falsas ("barrigas") entre consultas próximas.
+  - Gradiente de área suave adaptativo (*Esmeralda* para emagrecimento ou *Azul Safira* para ganho de massa).
+- **Docking Lateral Inteligente Anti-Corte**:
+  - O tooltip de inspeção acopla lateralmente para dentro da área do gráfico, garantindo legibilidade perfeita sem ser cortado nas bordas da tela.
+- **Header de Métricas Clínicas**:
+  - Indicadores em tempo real de *Peso Inicial*, *Peso Atual*, *Variação Total ($\Delta$ kg)* e *Mínimo / Máximo Registrado*.
+
+---
+
+### 5. 👤 Prontuário Completo do Paciente (`/pacientes/:id`)
 - **Card Principal de Identificação**:
   - Avatar, nome completo, e-mail, WhatsApp com link direto para conversa (`https://wa.me/...`) e data de cadastro.
   - Grade de dados: Sexo, Data de Nascimento com **cálculo automático de idade**, Peso Inicial, Altura e **IMC Inicial** com classificação clínica (*Eutrofia*, *Sobrepeso*, *Obesidade*).
@@ -62,15 +96,13 @@ Combinando um design no estilo **Bento Grid Editorial**, tipografia serifada mod
     2. *Saúde & Restrições*: Patologias, restrições alimentares, alergias, medicamentos e suplementos.
     3. *Hábitos & Rotina*: Refeições/dia, ingestão de água (L/dia), horários de sono e nível de atividade física.
     4. *Observações Clínicas*: Histórico geral e anotações do profissional.
-  - **Coluna da Direita (Histórico Clínico & Planos)**:
-    1. *Linha do Tempo de Consultas*: Histórico detalhado com número da consulta, data, peso, cintura, quadril, % gordura e conduta.
-    2. *Planos Alimentares*: Módulo dedicado para prescrição de cardápios e dietas personalizadas.
-- **Modal "Nova Consulta"**:
-  - Registro de novas consultas com validação de peso obrigatório, atualização em tempo real no banco Neon e recálculo instantâneo do gráfico.
+  - **Coluna da Direita (Histórico Clínico & Prescrição)**:
+    1. *Linha do Tempo de Consultas*: Histórico cronológico com todas as medidas corporais, retorno agendado e conduta.
+    2. *Planos Alimentares*: Prescrição e geração inteligente de cardápios semanais via IA.
 
 ---
 
-### 4. 👥 Listagem e Gestão de Pacientes (`/pacientes`)
+### 6. 👥 Listagem e Gestão de Pacientes (`/pacientes`)
 - **Busca em Tempo Real**: Filtragem instantânea por nome, e-mail ou telefone.
 - **Ordenação Dinâmica**: Classificação por nome, data de cadastro ou próximo retorno agendado.
 - **Paginação Limpa**: Navegação otimizada para 10 pacientes por página.
@@ -78,7 +110,7 @@ Combinando um design no estilo **Bento Grid Editorial**, tipografia serifada mod
 
 ---
 
-### 5. 🎨 Design System & Dark Mode
+### 7. 🎨 Design System & Dark Mode
 - **Paleta de Cores**: Fundo linho/papel suave (`#F8F7F4`), superfícies brancas com bordas finas em cinza quente (`#E5E2DC`) e detalhes em verde floresta/oliva (`#2D4336`).
 - **Dark Mode Refinado**: Modo escuro em tom linho profundo (`#121513`) com contraste otimizado para não cansar a visão em atendimentos noturnos.
 - **Resiliência**: `ErrorBoundary` integrado na raiz da aplicação prevenindo telas brancas e garantindo estabilidade contra falhas de renderização.
@@ -88,6 +120,7 @@ Combinando um design no estilo **Bento Grid Editorial**, tipografia serifada mod
 ## 🛠️ Tecnologias Utilizadas
 
 - **Frontend**: [React 19](https://react.dev/), [Vite](https://vitejs.dev/), [React Router DOM v7](https://reactrouter.com/)
+- **Inteligência Artificial**: [Google Generative AI SDK](https://ai.google.dev/) (`@google/generative-ai`)
 - **Banco de Dados**: [Neon Serverless PostgreSQL](https://neon.tech/) (`@neondatabase/serverless`)
 - **Autenticação**: [Neon Auth](https://neon.tech/docs/guides/neon-auth) (`@neondatabase/neon-js`)
 - **Tipografia**: [Newsreader](https://fonts.google.com/specimen/Newsreader) (Serifada Editorial) & [Plus Jakarta Sans](https://fonts.google.com/specimen/Plus+Jakarta+Sans) (Sans-Serif)
@@ -135,7 +168,7 @@ CREATE TABLE pacientes (
   created_at TIMESTAMP DEFAULT now()
 );
 
--- Consultas
+-- Consultas Antropométricas
 CREATE TABLE consultas (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   paciente_id UUID NOT NULL REFERENCES pacientes(id) ON DELETE CASCADE,
@@ -144,12 +177,16 @@ CREATE TABLE consultas (
   cintura NUMERIC,
   quadril NUMERIC,
   percentual_gordura NUMERIC,
+  torax NUMERIC,
+  braco NUMERIC,
+  coxa NUMERIC,
+  panturrilha NUMERIC,
   proximo_retorno DATE,
   observacoes TEXT,
   created_at TIMESTAMP DEFAULT now()
 );
 
--- Planos Alimentares
+-- Planos Alimentares (JSONB com estrutura semanal)
 CREATE TABLE planos_alimentares (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   paciente_id UUID NOT NULL REFERENCES pacientes(id) ON DELETE CASCADE,
@@ -166,6 +203,7 @@ CREATE TABLE planos_alimentares (
 - **Node.js** (versão 18 ou superior)
 - **Git**
 - Conta e banco configurados no [Neon](https://neon.tech)
+- Chave de API do [Google AI Studio](https://aistudio.google.com/) (Gemini)
 
 ### Passo a passo
 
@@ -181,11 +219,12 @@ CREATE TABLE planos_alimentares (
    ```
 
 3. **Configure as Variáveis de Ambiente:**
-   Crie um arquivo `.env` na raiz do projeto preenchendo com as credenciais do seu projeto Neon:
+   Crie um arquivo `.env` na raiz do projeto:
    ```env
    VITE_NEON_AUTH_URL="https://sua-instancia.neonauth.sa-east-1.aws.neon.tech/neondb/auth"
    NEON_DB_URL="postgresql://seu_usuario:sua_senha@seu-host.sa-east-1.aws.neon.tech/neondb?sslmode=require"
    VITE_NEON_DB_URL="postgresql://seu_usuario:sua_senha@seu-host.sa-east-1.aws.neon.tech/neondb?sslmode=require"
+   GEMINI_API_KEY="sua_chave_gemini_aqui"
    ```
 
 4. **Inicie o servidor de desenvolvimento:**
@@ -205,28 +244,38 @@ CREATE TABLE planos_alimentares (
 
 ```
 LopesNutri/
-├── api/                    # Serverless Functions da API (Vercel)
-│   └── register-nutricionista.js
-├── public/                 # Assets estáticos (logos, favicons)
+├── api/                             # Serverless Functions da API (Vercel)
+│   ├── gerar-plano.js               # Geração inteligente de dietas via Gemini AI
+│   └── register-nutricionista.js     # Cadastro inicial de nutricionistas
+├── public/                          # Assets estáticos (logos, silhuetas de alta definição)
+│   ├── silhueta-masculina.png
+│   ├── silhueta-feminina.png
+│   └── logo.png
 ├── src/
-│   ├── components/         # Componentes reutilizáveis (Sidebar, AppLayout, EvolucaoPesoChart, Logo, ErrorBoundary)
-│   ├── context/            # Context API (ThemeContext)
-│   ├── pages/              # Páginas da aplicação
-│   │   ├── Dashboard.jsx         # Bento Grid Editorial Dashboard
-│   │   ├── Login.jsx             # Autenticação de Nutricionistas
-│   │   ├── PacienteDetalhes.jsx  # Prontuário, Evolução e Consultas
-│   │   ├── Pacientes.jsx         # Gestão e Listagem de Pacientes
-│   │   └── Register.jsx          # Cadastro de Novo Nutricionista
-│   ├── utils/              # Funções utilitárias (helpers, formatação de datas e telefones)
-│   ├── auth.js             # Cliente de autenticação do Neon Auth
-│   ├── db.js               # Conexão Serverless com Neon PostgreSQL
-│   ├── App.jsx             # Roteamento e ErrorBoundary
-│   ├── index.css           # Design System, Bento Grid e estilos globais
-│   └── main.jsx            # Ponto de entrada da aplicação
-├── .env                    # Variáveis de ambiente (ignorado no git)
-├── vercel.json             # Configuração SPA e Serverless no Vercel
-├── vite.config.js          # Configuração do Vite
-└── README.md               # Documentação do projeto
+│   ├── components/                  # Componentes reutilizáveis
+│   │   ├── EvolucaoPesoChart.jsx    # Gráfico de peso com Monotone Cubic Spline
+│   │   ├── SilhuetaCorporalEvolucao.jsx # Silhueta anatômica e mapeamento de perímetros
+│   │   ├── PlanoAlimentarManager.jsx # Gestor de dietas e impressão de PDF limpo
+│   │   ├── Sidebar.jsx              # Navegação lateral responsiva
+│   │   ├── AppLayout.jsx            # Layout principal com Navbar e Topbar
+│   │   └── ErrorBoundary.jsx        # Tratamento de exceções e resiliência
+│   ├── context/                     # Context API (ThemeContext)
+│   ├── pages/                       # Páginas da aplicação
+│   │   ├── Dashboard.jsx            # Bento Grid Editorial Dashboard
+│   │   ├── Login.jsx                # Autenticação de Nutricionistas
+│   │   ├── PacienteDetalhes.jsx     # Prontuário, Evolução e Consultas
+│   │   ├── Pacientes.jsx            # Gestão e Listagem de Pacientes
+│   │   └── Register.jsx             # Cadastro de Novo Nutricionista
+│   ├── utils/                       # Funções utilitárias (helpers, formatação e datas)
+│   ├── auth.js                      # Cliente de autenticação do Neon Auth
+│   ├── db.js                        # Conexão Serverless com Neon PostgreSQL
+│   ├── App.jsx                      # Roteamento e ErrorBoundary
+│   ├── index.css                    # Design System, Bento Grid e estilos globais
+│   └── main.jsx                     # Ponto de entrada da aplicação
+├── .env                             # Variáveis de ambiente (ignorado no git)
+├── vercel.json                      # Configuração SPA e Serverless no Vercel
+├── vite.config.js                   # Configuração do Vite com proxy de API local
+└── README.md                        # Documentação do projeto
 ```
 
 ---
@@ -236,4 +285,3 @@ LopesNutri/
 Desenvolvido por **Gabriel Santos Lopes**  
 - **GitHub**: [@lopeszxw](https://github.com/lopeszxw)  
 - **Repositório**: [https://github.com/lopeszxw/lopesnutri](https://github.com/lopeszxw/lopesnutri)
-
