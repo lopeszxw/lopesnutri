@@ -19,23 +19,22 @@ import {
   X,
   Ruler,
   Scale,
-  HeartPulse,
-  Eye,
-  Layers
+  HeartPulse
 } from "lucide-react";
 import { sql } from "../db";
 import { formatDate } from "../utils/helpers";
 
-// Definição dos pontos anatômicos mapeados sobre a silhueta dinâmica (viewBox 320 x 680)
+// Definição dos pontos anatômicos mapeados sobre a silhueta exata (viewBox 330 x 700)
 const PONTOS_ANATOMICOS = [
   {
     key: "torax",
     label: "Tórax / Peitoral",
     unit: "cm",
     desc: "Perímetro torácico e peitoral",
-    yPct: 24,
-    defaultMasc: 95,
-    defaultFem: 90,
+    xMasc: 50,
+    yMasc: 27.5,
+    xFem: 50,
+    yFem: 29.5,
     goalType: "muscle"
   },
   {
@@ -43,9 +42,10 @@ const PONTOS_ANATOMICOS = [
     label: "Braço / Bíceps",
     unit: "cm",
     desc: "Perímetro do braço contraído/relaxado",
-    yPct: 32,
-    defaultMasc: 32,
-    defaultFem: 28,
+    xMasc: 19,
+    yMasc: 35,
+    xFem: 20,
+    yFem: 35,
     goalType: "muscle"
   },
   {
@@ -53,9 +53,10 @@ const PONTOS_ANATOMICOS = [
     label: "Cintura / Abdômen",
     unit: "cm",
     desc: "Circunferência na altura da cicatriz umbilical",
-    yPct: 40,
-    defaultMasc: 86,
-    defaultFem: 70,
+    xMasc: 50,
+    yMasc: 42,
+    xFem: 50,
+    yFem: 41,
     goalType: "reduction"
   },
   {
@@ -63,9 +64,10 @@ const PONTOS_ANATOMICOS = [
     label: "Quadril",
     unit: "cm",
     desc: "Maior perímetro da região glútea",
-    yPct: 52,
-    defaultMasc: 98,
-    defaultFem: 96,
+    xMasc: 50,
+    yMasc: 52,
+    xFem: 50,
+    yFem: 52,
     goalType: "reduction"
   },
   {
@@ -73,9 +75,10 @@ const PONTOS_ANATOMICOS = [
     label: "Coxa",
     unit: "cm",
     desc: "Perímetro medial da coxa",
-    yPct: 66,
-    defaultMasc: 58,
-    defaultFem: 56,
+    xMasc: 38,
+    yMasc: 66,
+    xFem: 38,
+    yFem: 66,
     goalType: "muscle"
   },
   {
@@ -83,113 +86,16 @@ const PONTOS_ANATOMICOS = [
     label: "Panturrilha",
     unit: "cm",
     desc: "Maior circunferência da perna",
-    yPct: 85,
-    defaultMasc: 38,
-    defaultFem: 36,
+    xMasc: 37,
+    yMasc: 85,
+    xFem: 37,
+    yFem: 85,
     goalType: "muscle"
   }
 ];
 
-/**
- * Gera o Traçado SVG Paramétrico da Silhueta Corporal
- * Deforma dinamicamente o corpo com base nas medidas reais de cada consulta.
- */
-function getParametricSilhouettePath({
-  isFeminino,
-  scaleTorax = 1,
-  scaleBraco = 1,
-  scaleCintura = 1,
-  scaleQuadril = 1,
-  scaleCoxa = 1,
-  scalePanturrilha = 1
-}) {
-  const cx = 160;
-
-  // Aplica fator de amplificação visual suave para tornar variações anatômicas perceptíveis no desenho
-  const amp = (sc, factor = 2.4) => 1 + (sc - 1) * factor;
-
-  const st = amp(scaleTorax, 2.0);
-  const sb = amp(scaleBraco, 2.2);
-  const sc = amp(scaleCintura, 2.5);
-  const sq = amp(scaleQuadril, 2.3);
-  const sco = amp(scaleCoxa, 2.2);
-  const sp = amp(scalePanturrilha, 2.2);
-
-  if (isFeminino) {
-    const shoulderW = Math.max(42, Math.min(68, 54 * st));
-    const chestW = Math.max(38, Math.min(64, 48 * st));
-    const waistW = Math.max(26, Math.min(54, 35 * sc));
-    const hipW = Math.max(46, Math.min(78, 62 * sq));
-    const armW = Math.max(8, Math.min(22, 13 * sb));
-    const thighW = Math.max(18, Math.min(38, 26 * sco));
-    const calfW = Math.max(12, Math.min(26, 17 * sp));
-
-    return `
-      M ${cx - 12} 66
-      C ${cx - shoulderW} 72, ${cx - shoulderW - 12} 90, ${cx - shoulderW - 18 - armW} 125
-      C ${cx - shoulderW - 22 - armW} 165, ${cx - shoulderW - 18 - armW} 215, ${cx - shoulderW - 14 - armW} 265
-      C ${cx - shoulderW - 10} 275, ${cx - shoulderW - 2} 270, ${cx - shoulderW + 2} 260
-      C ${cx - shoulderW + 8} 205, ${cx - chestW - 4} 160, ${cx - chestW} 140
-      C ${cx - chestW + 2} 170, ${cx - waistW - 2} 210, ${cx - waistW} 265
-      C ${cx - waistW} 305, ${cx - hipW} 335, ${cx - hipW} 358
-      C ${cx - hipW + 4} 395, ${cx - 18 - thighW} 440, ${cx - 16 - thighW} 490
-      C ${cx - 14 - calfW} 530, ${cx - 12 - calfW} 580, ${cx - 10 - calfW} 630
-      C ${cx - 8} 645, ${cx - 1} 645, ${cx - 3} 630
-      C ${cx - 5} 580, ${cx - 7} 530, ${cx - 9} 490
-      L ${cx} 385
-      L ${cx + 9} 490
-      C ${cx + 7} 530, ${cx + 5} 580, ${cx + 3} 630
-      C ${cx + 1} 645, ${cx + 8} 645, ${cx + 10 + calfW} 630
-      C ${cx + 12 + calfW} 580, ${cx + 14 + calfW} 530, ${cx + 16 + thighW} 490
-      C ${cx + 18 + thighW} 440, ${cx + hipW - 4} 395, ${cx + hipW} 358
-      C ${cx + hipW} 335, ${cx + waistW} 305, ${cx + waistW} 265
-      C ${cx + waistW - 2} 210, ${cx + chestW - 2} 170, ${cx + chestW} 140
-      C ${cx + chestW - 4} 160, ${cx + shoulderW - 8} 205, ${cx + shoulderW - 2} 260
-      C ${cx + shoulderW + 2} 270, ${cx + shoulderW + 10} 275, ${cx + shoulderW + 14 + armW} 265
-      C ${cx + shoulderW + 18 + armW} 215, ${cx + shoulderW + 22 + armW} 165, ${cx + shoulderW + 18 + armW} 125
-      C ${cx + shoulderW + 12} 90, ${cx + shoulderW} 72, ${cx + 12} 66
-      Z
-    `;
-  } else {
-    // Masculino
-    const shoulderW = Math.max(54, Math.min(84, 68 * st));
-    const chestW = Math.max(48, Math.min(76, 60 * st));
-    const waistW = Math.max(34, Math.min(62, 44 * sc));
-    const hipW = Math.max(42, Math.min(70, 54 * sq));
-    const armW = Math.max(10, Math.min(26, 16 * sb));
-    const thighW = Math.max(20, Math.min(42, 28 * sco));
-    const calfW = Math.max(14, Math.min(30, 19 * sp));
-
-    return `
-      M ${cx - 15} 66
-      C ${cx - shoulderW} 72, ${cx - shoulderW - 14} 92, ${cx - shoulderW - 20 - armW} 130
-      C ${cx - shoulderW - 24 - armW} 170, ${cx - shoulderW - 20 - armW} 225, ${cx - shoulderW - 16 - armW} 272
-      C ${cx - shoulderW - 12} 282, ${cx - shoulderW - 4} 278, ${cx - shoulderW + 1} 268
-      C ${cx - shoulderW + 6} 212, ${cx - chestW - 6} 165, ${cx - chestW} 146
-      C ${cx - chestW + 4} 176, ${cx - waistW - 2} 216, ${cx - waistW} 265
-      C ${cx - waistW} 305, ${cx - hipW} 330, ${cx - hipW} 355
-      C ${cx - hipW + 4} 390, ${cx - 20 - thighW} 440, ${cx - 18 - thighW} 490
-      C ${cx - 16 - calfW} 530, ${cx - 14 - calfW} 580, ${cx - 12 - calfW} 630
-      C ${cx - 10} 645, ${cx - 2} 645, ${cx - 4} 630
-      C ${cx - 6} 580, ${cx - 8} 530, ${cx - 10} 490
-      L ${cx} 390
-      L ${cx + 10} 490
-      C ${cx + 8} 530, ${cx + 6} 580, ${cx + 4} 630
-      C ${cx + 2} 645, ${cx + 10} 645, ${cx + 12 + calfW} 630
-      C ${cx + 14 + calfW} 580, ${cx + 16 + calfW} 530, ${cx + 18 + thighW} 490
-      C ${cx + 20 + thighW} 440, ${cx + hipW - 4} 390, ${cx + hipW} 355
-      C ${cx + hipW} 330, ${cx + waistW} 305, ${cx + waistW} 265
-      C ${cx + waistW - 2} 216, ${cx + chestW - 4} 176, ${cx + chestW} 146
-      C ${cx + chestW - 6} 165, ${cx + shoulderW - 6} 212, ${cx + shoulderW - 1} 268
-      C ${cx + shoulderW + 4} 278, ${cx + shoulderW + 12} 282, ${cx + shoulderW + 16 + armW} 272
-      C ${cx + shoulderW + 20 + armW} 225, ${cx + shoulderW + 24 + armW} 170, ${cx + shoulderW + 20 + armW} 130
-      C ${cx + shoulderW + 14} 92, ${cx + shoulderW} 72, ${cx + 15} 66
-      Z
-    `;
-  }
-}
-
 export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = [], onConsultaUpdated }) {
+  // Ordena consultas por data crescente
   const consultasOrdenadas = useMemo(() => {
     return [...(consultas || [])]
       .filter((c) => c && c.data_consulta)
@@ -200,10 +106,9 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
   const [indiceConsultaAtiva, setIndiceConsultaAtiva] = useState(
     consultasOrdenadas.length > 0 ? consultasOrdenadas.length - 1 : 0
   );
-  const [pontoAtivoKey, setPontoAtivoKey] = useState("quadril");
-  const [mostrarSobreposicaoBase, setMostrarSobreposicaoBase] = useState(true);
+  const [pontoAtivoKey, setPontoAtivoKey] = useState("cintura");
 
-  // Modal de edição
+  // Estado de Edição de Medidas
   const [modalEditOpen, setModalEditOpen] = useState(false);
   const [savingMedidas, setSavingMedidas] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -219,10 +124,13 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
     panturrilha: ""
   });
 
+  // Silhueta estritamente com base no sexo do cadastro do paciente
   const isFeminino = (paciente.sexo || "").toLowerCase().includes("fem");
+
   const consultaBase = consultasOrdenadas[indiceConsultaBase] || null;
   const consultaAtiva = consultasOrdenadas[indiceConsultaAtiva] || null;
 
+  // Atualiza formulário de edição sempre que trocar a consulta ativa
   useEffect(() => {
     if (consultaAtiva) {
       setEditForm({
@@ -238,46 +146,7 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
     }
   }, [consultaAtiva]);
 
-  // Cálculo de escalas anatômicas da Consulta Atual em relação à Consulta 1 (Base)
-  const morphScales = useMemo(() => {
-    const getScale = (key, defaultVal) => {
-      const vBase = consultaBase && parseFloat(consultaBase[key]) > 0 ? parseFloat(consultaBase[key]) : defaultVal;
-      const vAtivo = consultaAtiva && parseFloat(consultaAtiva[key]) > 0 ? parseFloat(consultaAtiva[key]) : vBase;
-      return vAtivo / vBase;
-    };
-
-    return {
-      scaleTorax: getScale("torax", isFeminino ? 90 : 95),
-      scaleBraco: getScale("braco", isFeminino ? 28 : 32),
-      scaleCintura: getScale("cintura", isFeminino ? 70 : 86),
-      scaleQuadril: getScale("quadril", isFeminino ? 96 : 98),
-      scaleCoxa: getScale("coxa", isFeminino ? 56 : 58),
-      scalePanturrilha: getScale("panturrilha", isFeminino ? 36 : 38)
-    };
-  }, [consultaBase, consultaAtiva, isFeminino]);
-
-  // Traçado da Silhueta Atual (Mórfica com base nas medidas)
-  const currentSilhouettePath = useMemo(() => {
-    return getParametricSilhouettePath({
-      isFeminino,
-      ...morphScales
-    });
-  }, [isFeminino, morphScales]);
-
-  // Traçado da Silhueta Base / 1ª Consulta (Ghost contour)
-  const baseSilhouettePath = useMemo(() => {
-    return getParametricSilhouettePath({
-      isFeminino,
-      scaleTorax: 1,
-      scaleBraco: 1,
-      scaleCintura: 1,
-      scaleQuadril: 1,
-      scaleCoxa: 1,
-      scalePanturrilha: 1
-    });
-  }, [isFeminino]);
-
-  // Cálculo de evolução de cada medida anatômica
+  // Cálculo de evolução das medidas corporais
   const evolucaoMedidas = useMemo(() => {
     if (!consultaAtiva) return [];
 
@@ -318,8 +187,8 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
         }
       }
 
-      const x = 50; // Centralizado no eixo x
-      const y = ponto.yPct;
+      const x = isFeminino ? ponto.xFem : ponto.xMasc;
+      const y = isFeminino ? ponto.yFem : ponto.yMasc;
 
       return {
         ...ponto,
@@ -334,21 +203,11 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
         y
       };
     });
-  }, [consultaBase, consultaAtiva]);
+  }, [consultaBase, consultaAtiva, isFeminino]);
 
   const medidaSelecionada = useMemo(() => {
     return evolucaoMedidas.find((m) => m.key === pontoAtivoKey) || evolucaoMedidas[0];
   }, [evolucaoMedidas, pontoAtivoKey]);
-
-  // Histórico completo de todas as consultas para a medida em foco
-  const historicoMedidaFoco = useMemo(() => {
-    if (!medidaSelecionada) return [];
-    return consultasOrdenadas.map((c, idx) => ({
-      idx: idx + 1,
-      data: c.data_consulta,
-      valor: parseFloat(c[medidaSelecionada.key]) || null
-    })).filter((item) => item.valor !== null);
-  }, [consultasOrdenadas, medidaSelecionada]);
 
   // Salvar edições das medidas diretamente no banco
   const handleSalvarEdicaoMedidas = async (e) => {
@@ -405,7 +264,7 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
           <div>
             <h3 style={{ fontSize: "1.15rem", fontWeight: 800 }}>Mapeamento Antropométrico & Silhueta Corporal</h3>
             <span className="chart-subtitle">
-              Morfologia corporal dinâmica e evolução de perímetros ({paciente.sexo || "Paciente"})
+              Visualização anatômica oficial ({paciente.sexo || "Gênero"}) da evolução de circunferências
             </span>
           </div>
         </div>
@@ -444,88 +303,46 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
 
       {/* Grid Principal */}
       <div className="silhueta-main-grid">
-        {/* Painel da Silhueta Dinâmica com Morphing e Sobreposição */}
+        {/* Painel da Silhueta */}
         <div className="silhueta-viewport-container">
           <div className="silhueta-viewport-header">
             <span className="silhueta-model-badge">
-              Silhueta {isFeminino ? "Feminina" : "Masculina"} · {paciente.nome}
+              Silhueta {isFeminino ? "Feminina" : "Masculina"} · {paciente.nome || "Paciente"}
             </span>
-
-            {/* Toggle de Comparativo de Sobreposição */}
-            <button
-              type="button"
-              className={`btn-ghost-toggle ${mostrarSobreposicaoBase ? "active" : ""}`}
-              onClick={() => setMostrarSobreposicaoBase(!mostrarSobreposicaoBase)}
-              title="Alternar sobreposição do contorno da 1ª Consulta"
-            >
-              <Layers size={13} />
-              <span>Comparar C1</span>
-            </button>
+            <span className="silhueta-click-hint">Clique nos pontos para detalhes</span>
           </div>
 
           <div className="silhueta-canvas-wrapper">
             <svg
-              viewBox="0 0 320 680"
+              viewBox="0 0 330 700"
               className="silhueta-vector-svg"
               preserveAspectRatio="xMidYMid meet"
             >
               <defs>
-                {/* Gradiente Corporal Esmeralda */}
-                <linearGradient id="morphBodyGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.88" />
-                  <stop offset="50%" stopColor="var(--primary)" stopOpacity="0.75" />
-                  <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.60" />
-                </linearGradient>
-
                 <filter id="silhouetteGlow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feDropShadow dx="0" dy="4" stdDeviation="8" floodColor="rgba(16, 185, 129, 0.35)" />
+                  <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="rgba(16, 185, 129, 0.35)" />
                 </filter>
               </defs>
 
-              {/* 1. Silhueta de Sobreposição Fantasma da 1ª Consulta (Linha Tracejada) */}
-              {mostrarSobreposicaoBase && indiceConsultaAtiva > 0 && (
-                <g className="base-ghost-silhouette">
-                  {/* Cabeça Base */}
-                  <ellipse cx="160" cy="38" rx={isFeminino ? 22 : 24} ry={isFeminino ? 26 : 28} fill="none" stroke="var(--text-muted)" strokeDasharray="3 3" strokeWidth="1.5" opacity="0.4" />
-                  {/* Tronco Base */}
-                  <path
-                    d={baseSilhouettePath}
-                    fill="none"
-                    stroke="var(--text-muted)"
-                    strokeDasharray="4 4"
-                    strokeWidth="1.8"
-                    opacity="0.45"
-                  />
-                </g>
-              )}
-
-              {/* 2. Silhueta Corporal Atual com Deformação Anatômica Dinâmica */}
-              <g className="current-dynamic-silhouette" filter="url(#silhouetteGlow)">
-                {/* Cabeça */}
-                <ellipse
-                  cx="160"
-                  cy="38"
-                  rx={isFeminino ? 22 : 24}
-                  ry={isFeminino ? 26 : 28}
-                  fill="url(#morphBodyGradient)"
-                />
-
-                {/* Tronco e Membros com Morphing em Tempo Real */}
-                <path
-                  d={currentSilhouettePath}
-                  fill="url(#morphBodyGradient)"
-                  className="morphing-body-path"
-                />
-              </g>
+              {/* Silhueta Oficial com base estrita no sexo do paciente */}
+              <image
+                href={isFeminino ? "/silhueta-feminina.png" : "/silhueta-masculina.png"}
+                x="0"
+                y="0"
+                width="330"
+                height="700"
+                filter="url(#silhouetteGlow)"
+                className="exact-user-silhouette-image"
+              />
 
               {/* Linha Central Guia Sutil */}
-              <line x1="160" y1="120" x2="160" y2="390" stroke="#ffffff" strokeDasharray="3 3" strokeWidth="1" opacity="0.3" />
+              <line x1="165" y1="120" x2="165" y2="400" stroke="var(--primary)" strokeDasharray="3 3" strokeWidth="1" opacity="0.35" />
 
-              {/* 3. Hotspots Anatômicos Interativos com Variação */}
+              {/* Hotspots Anatômicos Interativos */}
               {evolucaoMedidas.map((medida) => {
                 const isSelected = medida.key === pontoAtivoKey;
-                const posX = 160;
-                const posY = (medida.y / 100) * 680;
+                const posX = (medida.x / 100) * 330;
+                const posY = (medida.y / 100) * 700;
 
                 return (
                   <g
@@ -535,7 +352,7 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
                     style={{ cursor: "pointer" }}
                   >
                     {/* Alvo invisível amplo para toque */}
-                    <circle cx={posX} cy={posY} r="28" fill="transparent" />
+                    <circle cx={posX} cy={posY} r="26" fill="transparent" />
 
                     {/* Halo de Pulso */}
                     <circle
@@ -561,10 +378,10 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
                       <circle cx={posX} cy={posY} r="3.5" fill={medida.diffColor} />
                     )}
 
-                    {/* Badge Flutuante com Medida + Delta de Evolução */}
-                    <g transform={`translate(${posX > 160 ? posX + 16 : posX - 92}, ${posY - 14})`}>
+                    {/* Badge Flutuante */}
+                    <g transform={`translate(${posX > 165 ? posX + 14 : posX - 76}, ${posY - 14})`}>
                       <rect
-                        width="76"
+                        width="62"
                         height="26"
                         rx="13"
                         fill="var(--surface)"
@@ -573,10 +390,10 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
                         filter="drop-shadow(0 2px 8px rgba(0,0,0,0.15))"
                       />
                       <text
-                        x="38"
+                        x="31"
                         y="17"
                         textAnchor="middle"
-                        fontSize="10"
+                        fontSize="10.5"
                         fontWeight="800"
                         fill="var(--text-main)"
                       >
@@ -588,15 +405,9 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
               })}
             </svg>
           </div>
-
-          <div className="silhueta-viewport-footer">
-            <span className="silhueta-morph-caption">
-              ✨ A silhueta se deforma dinamicamente conforme as medidas evoluem.
-            </span>
-          </div>
         </div>
 
-        {/* Painel Lateral: Métricas Detalhadas, Gráfico de Evolução da Medida & Edição */}
+        {/* Painel Lateral: Métricas Detalhadas & Edição Rápida */}
         <div className="silhueta-details-panel">
           {medidaSelecionada && (
             <div className="focused-measure-card animate-fade-in">
@@ -641,47 +452,16 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
                 </div>
 
                 <div className="focused-metric-box variation-box">
-                  <span className="focused-metric-title">Variação no Período</span>
+                  <span className="focused-metric-title">Variação Total</span>
                   <div className="focused-variation-wrap" style={{ color: medidaSelecionada.diffColor }}>
                     <medidaSelecionada.icon size={18} />
                     <strong className="focused-variation-val">{medidaSelecionada.diffStr}</strong>
                   </div>
                   <span className="focused-metric-date">
-                    {medidaSelecionada.diff && Math.abs(medidaSelecionada.diff) > 0
-                      ? (medidaSelecionada.isGood ? "Evolução Positiva" : "Variação Registrada")
-                      : "Sem alteração"}
+                    {medidaSelecionada.isGood ? "Evolução Positiva" : "Necessita Atenção"}
                   </span>
                 </div>
               </div>
-
-              {/* Mini Histórico Cronológico de Evolução da Medida */}
-              {historicoMedidaFoco.length > 1 && (
-                <div className="measure-timeline-strip">
-                  <span className="timeline-strip-title">Evolução por Consulta:</span>
-                  <div className="timeline-strip-items">
-                    {historicoMedidaFoco.map((item, idx) => {
-                      const isCurrent = idx === indiceConsultaAtiva;
-                      const diffFirst = (item.valor - historicoMedidaFoco[0].valor).toFixed(1);
-                      return (
-                        <div
-                          key={item.idx}
-                          className={`strip-item ${isCurrent ? "active" : ""}`}
-                          onClick={() => setIndiceConsultaAtiva(idx)}
-                          style={{ cursor: "pointer" }}
-                        >
-                          <span className="strip-c-label">C{item.idx}</span>
-                          <strong className="strip-val">{item.valor} cm</strong>
-                          {idx > 0 && (
-                            <span className={`strip-diff ${parseFloat(diffFirst) <= 0 ? "loss" : "gain"}`}>
-                              {parseFloat(diffFirst) > 0 ? `+${diffFirst}` : diffFirst}
-                            </span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
