@@ -5516,16 +5516,26 @@ button {
 }
 
 /* ==========================================================================
-   Print / PDF Clean Clinical Layout for Plano Alimentar (No Website UI)
+   Print / PDF Clean Clinical Layout for Plano Alimentar (No Website UI, No Browser URLs)
    ========================================================================== */
+@page {
+  margin: 0mm !important;
+  size: A4 portrait;
+}
+
 @media screen {
-  .plano-print-only {
+  .plano-print-only,
+  #plano-alimentar-print-document {
     display: none !important;
   }
 }
 
 @media print {
-  /* Hide all application interface (header, sidebars, charts, buttons, background) */
+  @page {
+    margin: 0mm !important; /* Desativa cabeçalho de URL, data e rodapé do navegador */
+    size: A4 portrait;
+  }
+
   html, body {
     background: #ffffff !important;
     color: #111827 !important;
@@ -5533,34 +5543,34 @@ button {
     margin: 0 !important;
     padding: 0 !important;
     font-size: 11pt !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 100% !important;
+    overflow: visible !important;
   }
 
-  body * {
-    visibility: hidden !important;
+  /* Oculta completamente toda a aplicação React no DOM para zero páginas extras */
+  #root {
+    display: none !important;
   }
 
-  /* Show strictly the dedicated meal plan document */
-  #plano-alimentar-print-document,
-  #plano-alimentar-print-document * {
-    visibility: visible !important;
-  }
-
+  /* Exibe exclusivamente o documento de prescrição médica */
   #plano-alimentar-print-document {
     display: block !important;
-    position: absolute !important;
+    position: relative !important;
     left: 0 !important;
     top: 0 !important;
     width: 100% !important;
-    margin: 0 !important;
-    padding: 8mm 12mm !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 14mm 16mm !important;
     background: #ffffff !important;
     color: #111827 !important;
     box-sizing: border-box !important;
   }
 
-  @page {
-    size: A4 portrait;
-    margin: 10mm 10mm;
+  #plano-alimentar-print-document * {
+    visibility: visible !important;
   }
 
   * {

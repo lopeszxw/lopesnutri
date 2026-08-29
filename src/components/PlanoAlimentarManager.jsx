@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import {
   Sparkles,
   Utensils,
@@ -316,9 +317,9 @@ export default function PlanoAlimentarManager({ paciente, planos = [], onPlanoSa
   return (
     <div className="plano-alimentar-manager-wrapper">
       {/* =========================================================================
-          DOCUMENTO EXCLUSIVO DE IMPRESSÃO / PDF (Visível estritamente ao imprimir)
+          DOCUMENTO EXCLUSIVO DE IMPRESSÃO / PDF (Portal para o body)
           ========================================================================= */}
-      {planoAtivoParaPrint && planoAtivoParaPrint.plano_semanal && (
+      {typeof document !== "undefined" && planoAtivoParaPrint && planoAtivoParaPrint.plano_semanal && createPortal(
         <div id="plano-alimentar-print-document" className="plano-print-only">
           {/* Cabeçalho Oficial LopesNutri */}
           <div className="print-header-top">
@@ -432,7 +433,8 @@ export default function PlanoAlimentarManager({ paciente, planos = [], onPlanoSa
               <span>LopesNutri · CRN Ativo</span>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* =========================================================================
