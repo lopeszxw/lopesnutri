@@ -5077,5 +5077,297 @@ button {
   }
 }
 
+/* ==========================================================================
+   Print / PDF Clean Clinical Layout for Plano Alimentar (No Website UI)
+   ========================================================================== */
+@media screen {
+  .plano-print-only {
+    display: none !important;
+  }
+}
+
+@media print {
+  /* Hide all application interface (header, sidebars, charts, buttons, background) */
+  html, body {
+    background: #ffffff !important;
+    color: #111827 !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 11pt !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* Show strictly the dedicated meal plan document */
+  #plano-alimentar-print-document,
+  #plano-alimentar-print-document * {
+    visibility: visible !important;
+  }
+
+  #plano-alimentar-print-document {
+    display: block !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 8mm 12mm !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+    box-sizing: border-box !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 10mm 10mm;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Print Header */
+  .print-header-top {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding-bottom: 10px !important;
+    border-bottom: 2px solid #111827 !important;
+    margin-bottom: 14px !important;
+  }
+
+  .print-brand {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+  }
+
+  .print-logo-icon {
+    font-size: 24px !important;
+  }
+
+  .print-clinic-name {
+    font-size: 20px !important;
+    font-weight: 900 !important;
+    color: #111827 !important;
+    margin: 0 !important;
+    letter-spacing: -0.02em !important;
+    line-height: 1.1 !important;
+  }
+
+  .print-clinic-tagline {
+    font-size: 10px !important;
+    color: #4b5563 !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+  }
+
+  .print-doc-badge {
+    padding: 4px 12px !important;
+    border: 1.5px solid #111827 !important;
+    border-radius: 9999px !important;
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.06em !important;
+    color: #111827 !important;
+  }
+
+  /* Patient Card */
+  .print-patient-card {
+    background-color: #f9fafb !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    padding: 10px 14px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .print-patient-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px 14px !important;
+  }
+
+  .print-patient-item {
+    font-size: 11px !important;
+    color: #374151 !important;
+    display: flex !important;
+    align-items: baseline !important;
+    gap: 6px !important;
+  }
+
+  .print-label {
+    font-weight: 600 !important;
+    color: #6b7280 !important;
+    font-size: 10.5px !important;
+  }
+
+  .print-value {
+    font-weight: 700 !important;
+    color: #111827 !important;
+  }
+
+  /* Title Section */
+  .print-title-section {
+    margin-bottom: 14px !important;
+    padding-bottom: 8px !important;
+    border-bottom: 1px solid #e5e7eb !important;
+  }
+
+  .print-plan-title {
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    color: #111827 !important;
+    margin: 0 0 3px 0 !important;
+  }
+
+  .print-plan-desc {
+    font-size: 11px !important;
+    color: #4b5563 !important;
+    margin: 0 !important;
+    line-height: 1.35 !important;
+  }
+
+  /* Days Container */
+  .print-days-container {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  .print-day-block {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 8px !important;
+    padding: 10px 12px !important;
+    background-color: #ffffff !important;
+    margin-bottom: 10px !important;
+  }
+
+  .print-day-header {
+    padding-bottom: 6px !important;
+    margin-bottom: 8px !important;
+    border-bottom: 1.5px solid #111827 !important;
+  }
+
+  .print-day-header h3 {
+    font-size: 13px !important;
+    font-weight: 800 !important;
+    color: #111827 !important;
+    margin: 0 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.04em !important;
+  }
+
+  .print-meals-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 7px !important;
+  }
+
+  .print-meal-box {
+    padding: 5px 8px !important;
+    background-color: #f9fafb !important;
+    border-radius: 6px !important;
+    border-left: 3px solid #10b981 !important;
+  }
+
+  .print-meal-name {
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    color: #111827 !important;
+    margin-bottom: 3px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.02em !important;
+  }
+
+  .print-meal-options {
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+  }
+
+  .print-meal-options li {
+    font-size: 10.5px !important;
+    color: #374151 !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 5px !important;
+    line-height: 1.35 !important;
+  }
+
+  .print-opt-bullet {
+    color: #10b981 !important;
+    font-weight: 900 !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+  }
+
+  /* Footer Section */
+  .print-footer-section {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    margin-top: 18px !important;
+    padding-top: 12px !important;
+    border-top: 1px solid #e5e7eb !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: flex-end !important;
+    gap: 20px !important;
+  }
+
+  .print-guidelines-box {
+    flex: 1 !important;
+  }
+
+  .print-guidelines-box h4 {
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    color: #111827 !important;
+    margin: 0 0 3px 0 !important;
+  }
+
+  .print-guidelines-box ul {
+    margin: 0 !important;
+    padding-left: 14px !important;
+    font-size: 9.5px !important;
+    color: #6b7280 !important;
+    line-height: 1.4 !important;
+  }
+
+  .print-signature-wrap {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    min-width: 170px !important;
+    text-align: center !important;
+  }
+
+  .print-signature-line {
+    width: 100% !important;
+    border-top: 1px solid #111827 !important;
+    margin-bottom: 5px !important;
+  }
+
+  .print-signature-wrap strong {
+    font-size: 10.5px !important;
+    color: #111827 !important;
+  }
+
+  .print-signature-wrap span {
+    font-size: 9px !important;
+    color: #6b7280 !important;
+  }
+}
+
+
 
 

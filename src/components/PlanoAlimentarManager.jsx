@@ -22,7 +22,10 @@ import {
   Sandwich,
   Soup,
   Info,
-  Edit3
+  Edit3,
+  User,
+  Droplets,
+  Target
 } from "lucide-react";
 import { sql } from "../db";
 
@@ -113,8 +116,9 @@ export default function PlanoAlimentarManager({ paciente, planos = [], onPlanoSa
   const [isGeneratingIA, setIsGeneratingIA] = useState(false);
   const [loadingStepIndex, setLoadingStepIndex] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
-  const [feedbackMsg, setFeedbackMsg] = useState(null); // { type: 'success' | 'error' | 'info', text: string }
+  const [feedbackMsg, setFeedbackMsg] = useState(null);
   const [planoVisualizando, setPlanoVisualizando] = useState(null);
+  const [planoParaImprimir, setPlanoParaImprimir] = useState(null);
 
   // Mensagens dinâmicas de loading
   const loadingSteps = useMemo(() => [
@@ -157,7 +161,6 @@ export default function PlanoAlimentarManager({ paciente, planos = [], onPlanoSa
         throw new Error(data.error || "Não foi possível gerar o plano com IA.");
       }
 
-      // Preenche os dados recebidos
       setPlanoAtual(data.plano_semanal);
       setTituloPlano(
         `Plano Nutricional ${paciente?.nome ? `— ${paciente.nome}` : ""} (IA)`
@@ -174,7 +177,6 @@ export default function PlanoAlimentarManager({ paciente, planos = [], onPlanoSa
       });
     } catch (err) {
       console.warn("Falha na chamada da IA, aplicando plano base resiliente:", err);
-      // Fallback resiliente: inicializa plano base para que o nutricionista não fique travado
       const planoFallback = gerarPlanoBaseManual(paciente);
       setPlanoAtual(planoFallback);
       setTituloPlano(`Plano Alimentar Personalizado — ${paciente?.nome || "Paciente"}`);
@@ -246,7 +248,6 @@ export default function PlanoAlimentarManager({ paciente, planos = [], onPlanoSa
         text: "✅ Plano alimentar salvo com sucesso no prontuário do paciente!"
       });
 
-      // Notifica componente pai para recarregar lista
       if (onPlanoSaved) {
         await onPlanoSaved();
       }
@@ -261,9 +262,21 @@ export default function PlanoAlimentarManager({ paciente, planos = [], onPlanoSa
     }
   };
 
-  // Imprimir ou Exportar Plano
-  const handleImprimirPlano = () => {
-    window.print();
+  // Imprimir ou Exportar Plano Atual ou Histórico em PDF limpo
+  const handleImprimirPlano = (planoCustom = null) => {
+    const dadosImpressao = planoCustom || {
+      titulo: tituloPlano || "Plano Alimentar Semanal",
+      descricao: descricaoPlano || "Prescrição dietética individualizada.",
+      plano_semanal: planoAtual,
+      data_geracao: new Date().toISOString()
+    };
+
+    setPlanoParaImprimir(dadosImpressao);
+
+    // Timeout sutil para garantir que o DOM de impressão seja montado antes do print dialog
+    setTimeout(() => {
+      window.print();
+    }, 120);
   };
 
   // Visualizar plano antigo do histórico
@@ -292,9 +305,139 @@ export default function PlanoAlimentarManager({ paciente, planos = [], onPlanoSa
 
   const diaAtivoObj = planoAtual && planoAtual[diaAtivoIndex] ? planoAtual[diaAtivoIndex] : null;
 
+  // Plano ativo para documento de impressão
+  const planoAtivoParaPrint = planoParaImprimir || (planoAtual ? {
+    titulo: tituloPlano || "Plano Alimentar Semanal",
+    descricao: descricaoPlano || "Prescrição dietética individualizada.",
+    plano_semanal: planoAtual,
+    data_geracao: new Date().toISOString()
+  } : null);
+
   return (
     <div className="plano-alimentar-manager-wrapper">
-      {/* Header Principal da Seção */}
+      {/* =========================================================================
+          DOCUMENTO EXCLUSIVO DE IMPRESSÃO / PDF (Visível estritamente ao imprimir)
+          ========================================================================= */}
+      {planoAtivoParaPrint && planoAtivoParaPrint.plano_semanal && (
+        <div id="plano-alimentar-print-document" className="plano-print-only">
+          {/* Cabeçalho Oficial LopesNutri */}
+          <div className="print-header-top">
+            <div className="print-brand">
+              <div className="print-logo-icon">🌿</div>
+              <div>
+                <h1 className="print-clinic-name">LopesNutri</h1>
+                <span className="print-clinic-tagline">Nutrição Clínica & Performance Individualizada</span>
+              </div>
+            </div>
+            <div className="print-doc-badge">
+              <span>PRESCRIÇÃO DIETÉTICA</span>
+            </div>
+          </div>
+
+          {/* Dados do Paciente e Prescrição */}
+          <div className="print-patient-card">
+            <div className="print-patient-grid">
+              <div className="print-patient-item">
+                <span className="print-label">Paciente:</span>
+                <strong className="print-value">{paciente?.nome || "Paciente"}</strong>
+              </div>
+              <div className="print-patient-item">
+                <span className="print-label">Data de Emissão:</span>
+                <strong className="print-value">
+                  {new Date(planoAtivoParaPrint.data_geracao || Date.now()).toLocaleDateString("pt-BR", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric"
+                  })}
+                </strong>
+              </div>
+              <div className="print-patient-item">
+                <span className="print-label">Objetivo:</span>
+                <strong className="print-value">
+                  {Array.isArray(paciente?.objetivos) ? paciente.objetivos.join(", ") : (paciente?.objetivos || "Reeducação Alimentar")}
+                </strong>
+              </div>
+              <div className="print-patient-item">
+                <span className="print-label">Meta de Hidratação:</span>
+                <strong className="print-value">{paciente?.litros_agua ? `${paciente.litros_agua}L de água / dia` : "2.5L de água / dia"}</strong>
+              </div>
+              {paciente?.restricoes_alimentares && (
+                <div className="print-patient-item" style={{ gridColumn: "span 2" }}>
+                  <span className="print-label">Restrições / Alergias:</span>
+                  <strong className="print-value">
+                    {Array.isArray(paciente.restricoes_alimentares)
+                      ? paciente.restricoes_alimentares.join(", ")
+                      : paciente.restricoes_alimentares}
+                  </strong>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Título do Plano e Orientações */}
+          <div className="print-title-section">
+            <h2 className="print-plan-title">{planoAtivoParaPrint.titulo || "Plano Alimentar Semanal"}</h2>
+            {planoAtivoParaPrint.descricao && (
+              <p className="print-plan-desc">{planoAtivoParaPrint.descricao}</p>
+            )}
+          </div>
+
+          {/* Grade Semanal Completa das Refeições (7 Dias) */}
+          <div className="print-days-container">
+            {planoAtivoParaPrint.plano_semanal.map((diaItem, dIdx) => (
+              <div key={dIdx} className="print-day-block">
+                <div className="print-day-header">
+                  <h3>{diaItem.dia}</h3>
+                </div>
+
+                <div className="print-meals-grid">
+                  {REFEICOES_CONFIG.map((ref) => {
+                    const options = diaItem.refeicoes?.[ref.key] || [];
+                    if (options.length === 0) return null;
+                    return (
+                      <div key={ref.key} className="print-meal-box">
+                        <div className="print-meal-name">
+                          <span>{ref.label}</span>
+                        </div>
+                        <ul className="print-meal-options">
+                          {options.map((opt, oIdx) => (
+                            <li key={oIdx}>
+                              <span className="print-opt-bullet">•</span>
+                              <span>{opt}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Orientações Finais & Assinatura */}
+          <div className="print-footer-section">
+            <div className="print-guidelines-box">
+              <h4>Orientações Nutricionais Gerais</h4>
+              <ul>
+                <li>Mastigue os alimentos devagar e faça suas refeições em ambiente tranquilo.</li>
+                <li>Mantenha a hidratação distribuída ao longo do dia, evitando líquidos em excesso durante as refeições principais.</li>
+                <li>Dúvidas ou ajustes no cardápio devem ser comunicados diretamente ao seu nutricionista.</li>
+              </ul>
+            </div>
+
+            <div className="print-signature-wrap">
+              <div className="print-signature-line" />
+              <strong>Nutricionista Responsável</strong>
+              <span>LopesNutri · CRN Ativo</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          INTERFACE DE TELA (NÃO IMPRESSA)
+          ========================================================================= */}
       <div className="card-header-flex" style={{ alignItems: "center" }}>
         <div className="profile-card-title" style={{ marginBottom: 0 }}>
           <div className="icon-badge-round" style={{ background: "var(--primary-light)", color: "var(--primary)" }}>
@@ -452,8 +595,8 @@ export default function PlanoAlimentarManager({ paciente, planos = [], onPlanoSa
               <button
                 type="button"
                 className="btn-refresh"
-                onClick={handleImprimirPlano}
-                title="Imprimir prescrição ou salvar em PDF"
+                onClick={() => handleImprimirPlano()}
+                title="Imprimir prescrição limpa ou salvar em PDF"
               >
                 <Printer size={15} />
                 <span>Imprimir / PDF</span>
@@ -589,6 +732,16 @@ export default function PlanoAlimentarManager({ paciente, planos = [], onPlanoSa
 
                 <button
                   type="button"
+                  className="btn-refresh"
+                  onClick={() => handleImprimirPlano()}
+                  title="Imprimir prescrição ou salvar em PDF"
+                >
+                  <Printer size={15} />
+                  <span>Imprimir / PDF</span>
+                </button>
+
+                <button
+                  type="button"
                   className="btn-primary-action"
                   onClick={handleSalvarPlano}
                   disabled={isSaving}
@@ -699,17 +852,28 @@ export default function PlanoAlimentarManager({ paciente, planos = [], onPlanoSa
                     <div className="plano-expanded-viewer animate-fade-in">
                       <div className="expanded-actions-bar">
                         <span className="expanded-hint">
-                          Visualização rápida do cardápio semanal salvo em {dataFormatada}
+                          Visualização do cardápio semanal salvo em {dataFormatada}
                         </span>
-                        <button
-                          type="button"
-                          className="btn-secondary-action"
-                          onClick={() => handleEditarPlanoHistorico(plano)}
-                          style={{ padding: "0.45rem 0.95rem", fontSize: "0.82rem" }}
-                        >
-                          <Edit3 size={14} />
-                          <span>Carregar no Editor</span>
-                        </button>
+                        <div style={{ display: "flex", gap: "0.5rem" }}>
+                          <button
+                            type="button"
+                            className="btn-refresh"
+                            onClick={() => handleImprimirPlano(conteudo)}
+                            style={{ padding: "0.45rem 0.85rem", fontSize: "0.82rem" }}
+                          >
+                            <Printer size={14} />
+                            <span>Imprimir PDF</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-secondary-action"
+                            onClick={() => handleEditarPlanoHistorico(plano)}
+                            style={{ padding: "0.45rem 0.95rem", fontSize: "0.82rem" }}
+                          >
+                            <Edit3 size={14} />
+                            <span>Carregar no Editor</span>
+                          </button>
+                        </div>
                       </div>
 
                       <div className="expanded-days-grid">
