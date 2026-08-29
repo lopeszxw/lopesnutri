@@ -367,14 +367,23 @@ export default function EvolucaoPesoChart({ consultas = [] }) {
                   onMouseLeave={() => setHoveredPoint(null)}
                   style={{ cursor: "pointer" }}
                 >
+                  {/* Área invisível expandida para captura de hover suave */}
+                  <circle
+                    cx={pt.x}
+                    cy={pt.y}
+                    r="18"
+                    fill="transparent"
+                    pointerEvents="all"
+                  />
+
                   {/* Círculo de Pulse no Ponto Atual / Único */}
                   {(isLast || metrics.isSingle) && (
                     <circle
                       cx={pt.x}
                       cy={pt.y}
-                      r="10"
+                      r="11"
                       fill="var(--primary)"
-                      opacity="0.25"
+                      opacity="0.2"
                       className="pulse-circle"
                     />
                   )}
@@ -383,20 +392,20 @@ export default function EvolucaoPesoChart({ consultas = [] }) {
                   <circle
                     cx={pt.x}
                     cy={pt.y}
-                    r={isHovered ? "7" : isLast ? "6" : "4.5"}
+                    r={isHovered ? "7" : isLast ? "5.5" : "4"}
                     fill="var(--surface)"
                     stroke="var(--primary)"
                     strokeWidth={isHovered ? "3.5" : "2.5"}
-                    style={{ transition: "all 0.2s ease" }}
+                    style={{ transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)" }}
                   />
 
-                  {/* Valor acima do ponto se hover ou último */}
-                  {(isHovered || isLast || metrics.isSingle) && (
-                    <g transform={`translate(${pt.x}, ${pt.y - 12})`}>
+                  {/* Rótulo estático do peso (exibido apenas quando NÃO estiver em hover, para não sobrepor o tooltip) */}
+                  {!isHovered && (isLast || metrics.isSingle) && (
+                    <g transform={`translate(${pt.x}, ${pt.y - 14})`}>
                       <rect
-                        x="-24"
+                        x="-26"
                         y="-16"
-                        width="48"
+                        width="52"
                         height="18"
                         rx="4"
                         fill="var(--surface)"
