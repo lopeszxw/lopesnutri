@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { sql } from "../db";
 import EvolucaoPesoChart from "../components/EvolucaoPesoChart";
+import SilhuetaCorporalEvolucao from "../components/SilhuetaCorporalEvolucao";
 import PlanoAlimentarManager from "../components/PlanoAlimentarManager";
 import { parsePgArray, formatDate, safeDateString, formatPhone } from "../utils/helpers";
 
@@ -53,6 +54,10 @@ export default function PacienteDetalhes() {
     cintura: "",
     quadril: "",
     percentual_gordura: "",
+    torax: "",
+    braco: "",
+    coxa: "",
+    panturrilha: "",
     proximo_retorno: "",
     observacoes: ""
   });
@@ -161,6 +166,10 @@ export default function PacienteDetalhes() {
           cintura,
           quadril,
           percentual_gordura,
+          torax,
+          braco,
+          coxa,
+          panturrilha,
           proximo_retorno,
           observacoes
         ) VALUES (
@@ -170,6 +179,10 @@ export default function PacienteDetalhes() {
           ${newConsulta.cintura ? parseFloat(newConsulta.cintura) : null},
           ${newConsulta.quadril ? parseFloat(newConsulta.quadril) : null},
           ${newConsulta.percentual_gordura ? parseFloat(newConsulta.percentual_gordura) : null},
+          ${newConsulta.torax ? parseFloat(newConsulta.torax) : null},
+          ${newConsulta.braco ? parseFloat(newConsulta.braco) : null},
+          ${newConsulta.coxa ? parseFloat(newConsulta.coxa) : null},
+          ${newConsulta.panturrilha ? parseFloat(newConsulta.panturrilha) : null},
           ${newConsulta.proximo_retorno || null},
           ${newConsulta.observacoes.trim() || null}
         )
@@ -181,6 +194,10 @@ export default function PacienteDetalhes() {
         cintura: "",
         quadril: "",
         percentual_gordura: "",
+        torax: "",
+        braco: "",
+        coxa: "",
+        panturrilha: "",
         proximo_retorno: "",
         observacoes: ""
       });
@@ -339,6 +356,9 @@ export default function PacienteDetalhes() {
 
       {/* Gráfico de Evolução do Peso do Paciente (Emagrecimento / Aumento) */}
       <EvolucaoPesoChart consultas={consultas} />
+
+      {/* Silhueta Corporal & Mapeamento Antropométrico */}
+      <SilhuetaCorporalEvolucao paciente={paciente} consultas={consultas} />
 
       {/* Main 2-Column Content */}
       <div className="profile-grid-layout">
@@ -802,6 +822,90 @@ export default function PacienteDetalhes() {
                         value={newConsulta.quadril}
                         onChange={(e) =>
                           setNewConsulta({ ...newConsulta, quadril: e.target.value })
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-grid-2" style={{ marginTop: "0.85rem" }}>
+                  <div className="form-group-field">
+                    <label htmlFor="modal_torax_c" className="form-label">
+                      Tórax / Peitoral (cm)
+                    </label>
+                    <div className="input-with-icon">
+                      <Ruler size={17} className="input-icon-left" />
+                      <input
+                        type="number"
+                        step="0.1"
+                        id="modal_torax_c"
+                        className="styled-input-field"
+                        placeholder="Ex: 94"
+                        value={newConsulta.torax}
+                        onChange={(e) =>
+                          setNewConsulta({ ...newConsulta, torax: e.target.value })
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group-field">
+                    <label htmlFor="modal_braco_c" className="form-label">
+                      Braço / Bíceps (cm)
+                    </label>
+                    <div className="input-with-icon">
+                      <Ruler size={17} className="input-icon-left" />
+                      <input
+                        type="number"
+                        step="0.1"
+                        id="modal_braco_c"
+                        className="styled-input-field"
+                        placeholder="Ex: 32"
+                        value={newConsulta.braco}
+                        onChange={(e) =>
+                          setNewConsulta({ ...newConsulta, braco: e.target.value })
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-grid-2" style={{ marginTop: "0.85rem" }}>
+                  <div className="form-group-field">
+                    <label htmlFor="modal_coxa_c" className="form-label">
+                      Coxa (cm)
+                    </label>
+                    <div className="input-with-icon">
+                      <Ruler size={17} className="input-icon-left" />
+                      <input
+                        type="number"
+                        step="0.1"
+                        id="modal_coxa_c"
+                        className="styled-input-field"
+                        placeholder="Ex: 56"
+                        value={newConsulta.coxa}
+                        onChange={(e) =>
+                          setNewConsulta({ ...newConsulta, coxa: e.target.value })
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group-field">
+                    <label htmlFor="modal_panturrilha_c" className="form-label">
+                      Panturrilha (cm)
+                    </label>
+                    <div className="input-with-icon">
+                      <Ruler size={17} className="input-icon-left" />
+                      <input
+                        type="number"
+                        step="0.1"
+                        id="modal_panturrilha_c"
+                        className="styled-input-field"
+                        placeholder="Ex: 36"
+                        value={newConsulta.panturrilha}
+                        onChange={(e) =>
+                          setNewConsulta({ ...newConsulta, panturrilha: e.target.value })
                         }
                       />
                     </div>

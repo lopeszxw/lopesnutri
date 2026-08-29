@@ -5091,6 +5091,431 @@ button {
 }
 
 /* ==========================================================================
+   Mapeamento Antropométrico & Silhueta Corporal Interativa
+   ========================================================================== */
+.silhueta-evolucao-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 1.75rem;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.silhueta-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.silhueta-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.consultas-pill-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background-color: var(--surface-secondary);
+  border: 1px solid var(--border);
+  padding: 0.35rem 0.55rem;
+  border-radius: var(--radius-full);
+  overflow-x: auto;
+}
+
+.pill-selector-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0 0.4rem;
+}
+
+.consulta-badge-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  color: var(--text-main);
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.consulta-badge-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.consulta-badge-btn.active {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: #ffffff;
+  box-shadow: var(--shadow-btn);
+}
+
+[data-theme="dark"] .consulta-badge-btn.active {
+  background-color: #ffffff;
+  border-color: #ffffff;
+  color: #111311;
+}
+
+.badge-btn-date {
+  font-size: 0.7rem;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+/* Main Grid Layout */
+.silhueta-main-grid {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 1.5rem;
+  align-items: stretch;
+}
+
+/* Viewport Canvas */
+.silhueta-viewport-container {
+  background: var(--surface-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+
+.silhueta-viewport-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: 0.5rem;
+}
+
+.silhueta-model-badge {
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.silhueta-click-hint {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.silhueta-canvas-wrapper {
+  width: 100%;
+  max-width: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0;
+}
+
+.silhueta-vector-svg {
+  width: 100%;
+  height: auto;
+  max-height: 440px;
+  display: block;
+}
+
+.silhouette-hotspot-group {
+  transition: transform 0.2s ease;
+}
+
+.silhouette-hotspot-group:hover circle:nth-child(3) {
+  r: 8;
+}
+
+.hotspot-pulse {
+  animation: pulseHotspot 2.2s infinite ease-in-out;
+  transform-origin: center;
+}
+
+@keyframes pulseHotspot {
+  0% {
+    r: 9;
+    opacity: 0.4;
+  }
+  50% {
+    r: 16;
+    opacity: 0.08;
+  }
+  100% {
+    r: 9;
+    opacity: 0.4;
+  }
+}
+
+/* Details Panel Right Side */
+.silhueta-details-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Focused Measure Card */
+.focused-measure-card {
+  background: var(--surface-secondary);
+  border: 1.5px solid var(--primary-border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.focused-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.focused-badge-label {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.focused-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.focused-desc-muted {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.focused-metrics-grid {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.focused-metric-box {
+  flex: 1;
+  min-width: 130px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.focused-metric-box.highlight-box {
+  background-color: var(--primary-light);
+  border-color: var(--primary-border);
+}
+
+.focused-metric-box.variation-box {
+  background-color: var(--surface);
+}
+
+.focused-metric-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.focused-metric-val {
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: var(--text-main);
+  line-height: 1.1;
+}
+
+.focused-metric-date {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.focused-metric-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.25rem;
+}
+
+.focused-variation-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.focused-variation-val {
+  font-size: 1.35rem;
+  font-weight: 900;
+  line-height: 1.1;
+}
+
+/* All Measures Stack */
+.all-measures-grid-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.all-measures-title {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.measures-cards-stack {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.65rem;
+}
+
+.measure-row-item {
+  background-color: var(--surface-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.measure-row-item:hover {
+  border-color: var(--primary);
+  background-color: var(--surface-hover);
+  transform: translateY(-1px);
+}
+
+.measure-row-item.selected {
+  border-color: var(--primary);
+  background-color: var(--primary-light);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.measure-item-left {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.measure-item-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.measure-item-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-main);
+  display: block;
+}
+
+.measure-item-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.measure-item-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+}
+
+.measure-item-current {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.measure-item-diff-badge {
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0.1rem 0.45rem;
+  border-radius: var(--radius-full);
+  border: 1px solid transparent;
+}
+
+/* Extra Metrics Row */
+.silhueta-extra-metrics-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.extra-metric-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.extra-metric-lbl {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.extra-metric-num {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.extra-metric-delta {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+@media (max-width: 960px) {
+  .silhueta-main-grid {
+    grid-template-columns: 1fr;
+  }
+  .silhueta-viewport-container {
+    padding: 1.5rem 1rem;
+  }
+}
+
+/* ==========================================================================
    Print / PDF Clean Clinical Layout for Plano Alimentar (No Website UI)
    ========================================================================== */
 @media screen {
