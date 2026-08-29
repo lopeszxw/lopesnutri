@@ -358,7 +358,11 @@ export default function PacienteDetalhes() {
       <EvolucaoPesoChart consultas={consultas} />
 
       {/* Silhueta Corporal & Mapeamento Antropométrico */}
-      <SilhuetaCorporalEvolucao paciente={paciente} consultas={consultas} />
+      <SilhuetaCorporalEvolucao
+        paciente={paciente}
+        consultas={consultas}
+        onConsultaUpdated={fetchPacienteData}
+      />
 
       {/* Main 2-Column Content */}
       <div className="profile-grid-layout">

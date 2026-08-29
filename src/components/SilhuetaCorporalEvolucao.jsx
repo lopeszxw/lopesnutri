@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Activity,
   Calendar,
@@ -13,8 +13,15 @@ import {
   User,
   ArrowRight,
   Maximize2,
-  Info
+  Info,
+  Edit3,
+  Save,
+  X,
+  Ruler,
+  Scale,
+  HeartPulse
 } from "lucide-react";
+import { sql } from "../db";
 import { formatDate } from "../utils/helpers";
 
 // Definição dos pontos anatômicos mapeados sobre a silhueta exata (viewBox 330 x 700)
@@ -87,7 +94,7 @@ const PONTOS_ANATOMICOS = [
   }
 ];
 
-export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = [] }) {
+export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = [], onConsultaUpdated }) {
   // Ordena consultas por data crescente
   const consultasOrdenadas = useMemo(() => {
     return [...(consultas || [])]
@@ -100,13 +107,44 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
     consultasOrdenadas.length > 0 ? consultasOrdenadas.length - 1 : 0
   );
   const [pontoAtivoKey, setPontoAtivoKey] = useState("cintura");
-  const [sexoVisualizacao, setSexoVisualizacao] = useState(
-    (paciente.sexo || "").toLowerCase().includes("fem") ? "Feminino" : "Masculino"
-  );
+
+  // Estado de Edição de Medidas
+  const [modalEditOpen, setModalEditOpen] = useState(false);
+  const [savingMedidas, setSavingMedidas] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [editError, setEditError] = useState("");
+  const [editForm, setEditForm] = useState({
+    peso: "",
+    percentual_gordura: "",
+    torax: "",
+    braco: "",
+    cintura: "",
+    quadril: "",
+    coxa: "",
+    panturrilha: ""
+  });
+
+  // Silhueta estritamente com base no sexo do cadastro do paciente
+  const isFeminino = (paciente.sexo || "").toLowerCase().includes("fem");
 
   const consultaBase = consultasOrdenadas[indiceConsultaBase] || null;
   const consultaAtiva = consultasOrdenadas[indiceConsultaAtiva] || null;
-  const isFeminino = sexoVisualizacao === "Feminino";
+
+  // Atualiza formulário de edição sempre que trocar a consulta ativa
+  useEffect(() => {
+    if (consultaAtiva) {
+      setEditForm({
+        peso: consultaAtiva.peso ? String(consultaAtiva.peso) : "",
+        percentual_gordura: consultaAtiva.percentual_gordura ? String(consultaAtiva.percentual_gordura) : "",
+        torax: consultaAtiva.torax ? String(consultaAtiva.torax) : "",
+        braco: consultaAtiva.braco ? String(consultaAtiva.braco) : "",
+        cintura: consultaAtiva.cintura ? String(consultaAtiva.cintura) : "",
+        quadril: consultaAtiva.quadril ? String(consultaAtiva.quadril) : "",
+        coxa: consultaAtiva.coxa ? String(consultaAtiva.coxa) : "",
+        panturrilha: consultaAtiva.panturrilha ? String(consultaAtiva.panturrilha) : ""
+      });
+    }
+  }, [consultaAtiva]);
 
   // Cálculo de evolução das medidas corporais
   const evolucaoMedidas = useMemo(() => {
@@ -171,6 +209,46 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
     return evolucaoMedidas.find((m) => m.key === pontoAtivoKey) || evolucaoMedidas[0];
   }, [evolucaoMedidas, pontoAtivoKey]);
 
+  // Salvar edições das medidas diretamente no banco
+  const handleSalvarEdicaoMedidas = async (e) => {
+    e?.preventDefault();
+    if (!consultaAtiva?.id) return;
+
+    setSavingMedidas(true);
+    setEditError("");
+    setSaveSuccess(false);
+
+    try {
+      await sql`
+        UPDATE consultas SET
+          peso = ${editForm.peso ? parseFloat(editForm.peso) : null},
+          percentual_gordura = ${editForm.percentual_gordura ? parseFloat(editForm.percentual_gordura) : null},
+          torax = ${editForm.torax ? parseFloat(editForm.torax) : null},
+          braco = ${editForm.braco ? parseFloat(editForm.braco) : null},
+          cintura = ${editForm.cintura ? parseFloat(editForm.cintura) : null},
+          quadril = ${editForm.quadril ? parseFloat(editForm.quadril) : null},
+          coxa = ${editForm.coxa ? parseFloat(editForm.coxa) : null},
+          panturrilha = ${editForm.panturrilha ? parseFloat(editForm.panturrilha) : null}
+        WHERE id = ${consultaAtiva.id}
+      `;
+
+      setSaveSuccess(true);
+      if (onConsultaUpdated) {
+        await onConsultaUpdated();
+      }
+
+      setTimeout(() => {
+        setSaveSuccess(false);
+        setModalEditOpen(false);
+      }, 700);
+    } catch (err) {
+      console.error("Erro ao salvar medidas:", err);
+      setEditError("Erro ao salvar alterações no banco de dados.");
+    } finally {
+      setSavingMedidas(false);
+    }
+  };
+
   if (consultasOrdenadas.length === 0) {
     return null;
   }
@@ -186,12 +264,12 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
           <div>
             <h3 style={{ fontSize: "1.15rem", fontWeight: 800 }}>Mapeamento Antropométrico & Silhueta Corporal</h3>
             <span className="chart-subtitle">
-              Visualização anatômica oficial da evolução de circunferências e composição corporal
+              Visualização anatômica oficial ({paciente.sexo || "Gênero"}) da evolução de circunferências
             </span>
           </div>
         </div>
 
-        {/* Seletor de Consultas */}
+        {/* Seletor de Consultas & Ação de Editar */}
         <div className="silhueta-header-actions">
           <div className="consultas-pill-selector">
             <span className="pill-selector-label">Consulta:</span>
@@ -210,6 +288,16 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
               );
             })}
           </div>
+
+          <button
+            type="button"
+            className="btn-edit-medidas-pill"
+            onClick={() => setModalEditOpen(true)}
+            title="Editar as medidas desta consulta"
+          >
+            <Edit3 size={14} />
+            <span>Editar Medidas (C{indiceConsultaAtiva + 1})</span>
+          </button>
         </div>
       </div>
 
@@ -218,22 +306,9 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
         {/* Painel da Silhueta */}
         <div className="silhueta-viewport-container">
           <div className="silhueta-viewport-header">
-            <div className="silhueta-gender-toggle">
-              <button
-                type="button"
-                className={`gender-pill-btn ${!isFeminino ? "active" : ""}`}
-                onClick={() => setSexoVisualizacao("Masculino")}
-              >
-                Masculino
-              </button>
-              <button
-                type="button"
-                className={`gender-pill-btn ${isFeminino ? "active" : ""}`}
-                onClick={() => setSexoVisualizacao("Feminino")}
-              >
-                Feminino
-              </button>
-            </div>
+            <span className="silhueta-model-badge">
+              Silhueta {isFeminino ? "Feminina" : "Masculina"} · {paciente.nome || "Paciente"}
+            </span>
             <span className="silhueta-click-hint">Clique nos pontos para detalhes</span>
           </div>
 
@@ -249,7 +324,7 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
                 </filter>
               </defs>
 
-              {/* Silhueta Oficial com Alta Definição */}
+              {/* Silhueta Oficial com base estrita no sexo do paciente */}
               <image
                 href={isFeminino ? "/silhueta-feminina.png" : "/silhueta-masculina.png"}
                 x="0"
@@ -332,7 +407,7 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
           </div>
         </div>
 
-        {/* Painel Lateral: Métricas Detalhadas */}
+        {/* Painel Lateral: Métricas Detalhadas & Edição Rápida */}
         <div className="silhueta-details-panel">
           {medidaSelecionada && (
             <div className="focused-measure-card animate-fade-in">
@@ -341,7 +416,18 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
                   <span className="focused-dot" style={{ backgroundColor: medidaSelecionada.diffColor }} />
                   <strong>{medidaSelecionada.label}</strong>
                 </div>
-                <span className="focused-desc-muted">{medidaSelecionada.desc}</span>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <span className="focused-desc-muted">{medidaSelecionada.desc}</span>
+                  <button
+                    type="button"
+                    className="btn-quick-edit-measure"
+                    onClick={() => setModalEditOpen(true)}
+                    title="Editar esta medida"
+                  >
+                    <Edit3 size={13} />
+                    <span>Editar</span>
+                  </button>
+                </div>
               </div>
 
               <div className="focused-metrics-grid">
@@ -381,7 +467,12 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
 
           {/* Grid de Circunferências */}
           <div className="all-measures-grid-section">
-            <h4 className="all-measures-title">Painel de Circunferências Antropométricas</h4>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <h4 className="all-measures-title">Painel de Circunferências Antropométricas</h4>
+              <span style={{ fontSize: "0.74rem", color: "var(--text-muted)" }}>
+                Consulta #{indiceConsultaAtiva + 1} ({consultaAtiva ? formatDate(consultaAtiva.data_consulta) : ""})
+              </span>
+            </div>
             
             <div className="measures-cards-stack">
               {evolucaoMedidas.map((medida) => {
@@ -452,6 +543,198 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
           </div>
         </div>
       </div>
+
+      {/* Modal de Edição Direta de Todas as Medidas */}
+      {modalEditOpen && (
+        <div className="modal-overlay-custom animate-fade-in" onClick={() => setModalEditOpen(false)}>
+          <div className="modal-content-card animate-scale-up" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "600px" }}>
+            <div className="modal-header-custom">
+              <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+                <div className="modal-icon-badge">
+                  <Ruler size={20} color="var(--primary)" />
+                </div>
+                <div>
+                  <h2 className="modal-title-heading">
+                    Editar Medidas · Consulta #{indiceConsultaAtiva + 1}
+                  </h2>
+                  <span className="modal-subtitle-text">
+                    {formatDate(consultaAtiva?.data_consulta)} · {paciente.nome}
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="modal-close-btn"
+                onClick={() => setModalEditOpen(false)}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSalvarEdicaoMedidas} className="modal-form-body">
+              {editError && (
+                <div className="feedback-alert error animate-shake">
+                  <Info size={16} />
+                  <span>{editError}</span>
+                </div>
+              )}
+
+              {saveSuccess && (
+                <div className="feedback-alert success animate-fade-in">
+                  <CheckCircle2 size={16} />
+                  <span>Medidas salvas com sucesso!</span>
+                </div>
+              )}
+
+              <div className="form-section-block">
+                <div className="form-section-header">
+                  <div className="form-section-icon">
+                    <Scale size={15} />
+                  </div>
+                  <span className="form-section-title">Peso & Composição</span>
+                </div>
+
+                <div className="form-grid-2">
+                  <div className="form-group-field">
+                    <label className="form-label">Peso Atual (kg)</label>
+                    <div className="input-with-icon">
+                      <Scale size={17} className="input-icon-left" />
+                      <input
+                        type="number"
+                        step="0.1"
+                        className="styled-input-field"
+                        placeholder="Ex: 64.5"
+                        value={editForm.peso}
+                        onChange={(e) => setEditForm({ ...editForm, peso: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group-field">
+                    <label className="form-label">% Gordura Corporal</label>
+                    <div className="input-with-icon">
+                      <HeartPulse size={17} className="input-icon-left" />
+                      <input
+                        type="number"
+                        step="0.1"
+                        className="styled-input-field"
+                        placeholder="Ex: 20.5"
+                        value={editForm.percentual_gordura}
+                        onChange={(e) => setEditForm({ ...editForm, percentual_gordura: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-section-block" style={{ marginTop: "1rem" }}>
+                <div className="form-section-header">
+                  <div className="form-section-icon">
+                    <Ruler size={15} />
+                  </div>
+                  <span className="form-section-title">Circunferências Anatômicas (cm)</span>
+                </div>
+
+                <div className="form-grid-2">
+                  <div className="form-group-field">
+                    <label className="form-label">Tórax / Peitoral (cm)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      className="styled-input-field"
+                      placeholder="Ex: 94.5"
+                      value={editForm.torax}
+                      onChange={(e) => setEditForm({ ...editForm, torax: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="form-group-field">
+                    <label className="form-label">Braço / Bíceps (cm)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      className="styled-input-field"
+                      placeholder="Ex: 31.5"
+                      value={editForm.braco}
+                      onChange={(e) => setEditForm({ ...editForm, braco: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-grid-2" style={{ marginTop: "0.75rem" }}>
+                  <div className="form-group-field">
+                    <label className="form-label">Cintura / Abdômen (cm)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      className="styled-input-field"
+                      placeholder="Ex: 68.5"
+                      value={editForm.cintura}
+                      onChange={(e) => setEditForm({ ...editForm, cintura: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="form-group-field">
+                    <label className="form-label">Quadril (cm)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      className="styled-input-field"
+                      placeholder="Ex: 97.0"
+                      value={editForm.quadril}
+                      onChange={(e) => setEditForm({ ...editForm, quadril: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-grid-2" style={{ marginTop: "0.75rem" }}>
+                  <div className="form-group-field">
+                    <label className="form-label">Coxa (cm)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      className="styled-input-field"
+                      placeholder="Ex: 58.5"
+                      value={editForm.coxa}
+                      onChange={(e) => setEditForm({ ...editForm, coxa: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="form-group-field">
+                    <label className="form-label">Panturrilha (cm)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      className="styled-input-field"
+                      placeholder="Ex: 37.0"
+                      value={editForm.panturrilha}
+                      onChange={(e) => setEditForm({ ...editForm, panturrilha: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="modal-actions-footer" style={{ marginTop: "1.5rem" }}>
+                <button
+                  type="button"
+                  className="btn-modal-cancel"
+                  onClick={() => setModalEditOpen(false)}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="btn-modal-submit"
+                  disabled={savingMedidas}
+                >
+                  <Save size={16} />
+                  <span>{savingMedidas ? "Salvando..." : "Salvar Medidas"}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
