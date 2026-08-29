@@ -5210,12 +5210,41 @@ button {
   margin-bottom: 0.5rem;
 }
 
-.silhueta-model-badge {
-  font-size: 0.76rem;
+.silhueta-gender-toggle {
+  display: flex;
+  align-items: center;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  padding: 0.18rem;
+  gap: 0.2rem;
+}
+
+.gender-pill-btn {
+  padding: 0.25rem 0.65rem;
+  font-size: 0.72rem;
   font-weight: 800;
-  color: var(--primary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  border-radius: var(--radius-full);
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gender-pill-btn:hover {
+  color: var(--text-main);
+}
+
+.gender-pill-btn.active {
+  background-color: var(--primary);
+  color: #ffffff;
+  box-shadow: var(--shadow-btn);
+}
+
+[data-theme="dark"] .gender-pill-btn.active {
+  background-color: #ffffff;
+  color: #111311;
 }
 
 .silhueta-click-hint {
@@ -5225,7 +5254,7 @@ button {
 
 .silhueta-canvas-wrapper {
   width: 100%;
-  max-width: 280px;
+  max-width: 300px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -5235,8 +5264,16 @@ button {
 .silhueta-vector-svg {
   width: 100%;
   height: auto;
-  max-height: 440px;
+  max-height: 480px;
   display: block;
+}
+
+.exact-user-silhouette-image {
+  transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .exact-user-silhouette-image {
+  filter: drop-shadow(0 0 12px rgba(16, 185, 129, 0.4)) brightness(1.1);
 }
 
 .silhouette-hotspot-group {

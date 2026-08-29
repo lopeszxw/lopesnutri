@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { formatDate } from "../utils/helpers";
 
-// Definição dos pontos anatômicos corporais mapeados na silhueta SVG (coordenadas percentuais x, y)
+// Definição dos pontos anatômicos mapeados sobre a silhueta exata (viewBox 330 x 700)
 const PONTOS_ANATOMICOS = [
   {
     key: "torax",
@@ -25,20 +25,20 @@ const PONTOS_ANATOMICOS = [
     unit: "cm",
     desc: "Perímetro torácico e peitoral",
     xMasc: 50,
-    yMasc: 28,
+    yMasc: 27.5,
     xFem: 50,
-    yFem: 29,
-    goalType: "muscle" // ganho é positivo
+    yFem: 29.5,
+    goalType: "muscle"
   },
   {
     key: "braco",
     label: "Braço / Bíceps",
     unit: "cm",
     desc: "Perímetro do braço contraído/relaxado",
-    xMasc: 23,
-    yMasc: 34,
-    xFem: 24,
-    yFem: 34,
+    xMasc: 19,
+    yMasc: 35,
+    xFem: 20,
+    yFem: 35,
     goalType: "muscle"
   },
   {
@@ -50,7 +50,7 @@ const PONTOS_ANATOMICOS = [
     yMasc: 42,
     xFem: 50,
     yFem: 41,
-    goalType: "reduction" // redução é positivo
+    goalType: "reduction"
   },
   {
     key: "quadril",
@@ -58,9 +58,9 @@ const PONTOS_ANATOMICOS = [
     unit: "cm",
     desc: "Maior perímetro da região glútea",
     xMasc: 50,
-    yMasc: 53,
+    yMasc: 52,
     xFem: 50,
-    yFem: 53,
+    yFem: 52,
     goalType: "reduction"
   },
   {
@@ -70,7 +70,7 @@ const PONTOS_ANATOMICOS = [
     desc: "Perímetro medial da coxa",
     xMasc: 38,
     yMasc: 66,
-    xFem: 37,
+    xFem: 38,
     yFem: 66,
     goalType: "muscle"
   },
@@ -79,10 +79,10 @@ const PONTOS_ANATOMICOS = [
     label: "Panturrilha",
     unit: "cm",
     desc: "Maior circunferência da perna",
-    xMasc: 36,
-    yMasc: 84,
-    xFem: 36,
-    yFem: 84,
+    xMasc: 37,
+    yMasc: 85,
+    xFem: 37,
+    yFem: 85,
     goalType: "muscle"
   }
 ];
@@ -95,19 +95,20 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
       .sort((a, b) => new Date(a.data_consulta) - new Date(b.data_consulta));
   }, [consultas]);
 
-  const [indiceConsultaBase, setIndiceConsultaBase] = useState(0); // Geralmente a 1ª consulta
+  const [indiceConsultaBase, setIndiceConsultaBase] = useState(0);
   const [indiceConsultaAtiva, setIndiceConsultaAtiva] = useState(
     consultasOrdenadas.length > 0 ? consultasOrdenadas.length - 1 : 0
   );
   const [pontoAtivoKey, setPontoAtivoKey] = useState("cintura");
+  const [sexoVisualizacao, setSexoVisualizacao] = useState(
+    (paciente.sexo || "").toLowerCase().includes("fem") ? "Feminino" : "Masculino"
+  );
 
-  // Consulta inicial e consulta comparada
   const consultaBase = consultasOrdenadas[indiceConsultaBase] || null;
   const consultaAtiva = consultasOrdenadas[indiceConsultaAtiva] || null;
+  const isFeminino = sexoVisualizacao === "Feminino";
 
-  const isFeminino = (paciente.sexo || "").toLowerCase().includes("fem");
-
-  // Cálculo de evolução de cada medida anatômica
+  // Cálculo de evolução das medidas corporais
   const evolucaoMedidas = useMemo(() => {
     if (!consultaAtiva) return [];
 
@@ -126,7 +127,6 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
         diffStr = (diff > 0 ? `+${diff.toFixed(1)}` : diff.toFixed(1)) + " " + ponto.unit;
 
         if (ponto.goalType === "reduction") {
-          // Para cintura e quadril: perda é ótimo
           if (diff < -0.3) {
             diffColor = "#10b981";
             icon = TrendingDown;
@@ -137,7 +137,6 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
             isGood = false;
           }
         } else {
-          // Para braço, coxa, tórax: ganho ou manutenção é ótimo
           if (diff > 0.3) {
             diffColor = "#10b981";
             icon = TrendingUp;
@@ -168,7 +167,6 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
     });
   }, [consultaBase, consultaAtiva, isFeminino]);
 
-  // Medida selecionada atualmente em destaque
   const medidaSelecionada = useMemo(() => {
     return evolucaoMedidas.find((m) => m.key === pontoAtivoKey) || evolucaoMedidas[0];
   }, [evolucaoMedidas, pontoAtivoKey]);
@@ -179,7 +177,7 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
 
   return (
     <div className="silhueta-evolucao-card animate-fade-in">
-      {/* Cabeçalho da Seção */}
+      {/* Cabeçalho do Card */}
       <div className="silhueta-card-header">
         <div className="profile-card-title" style={{ marginBottom: 0 }}>
           <div className="icon-badge-round" style={{ background: "var(--primary-light)", color: "var(--primary)" }}>
@@ -188,12 +186,12 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
           <div>
             <h3 style={{ fontSize: "1.15rem", fontWeight: 800 }}>Mapeamento Antropométrico & Silhueta Corporal</h3>
             <span className="chart-subtitle">
-              Visualização anatômica interativa da evolução de circunferências e composição corporal
+              Visualização anatômica oficial da evolução de circunferências e composição corporal
             </span>
           </div>
         </div>
 
-        {/* Seletor de Comparativo / Consultas */}
+        {/* Seletor de Consultas */}
         <div className="silhueta-header-actions">
           <div className="consultas-pill-selector">
             <span className="pill-selector-label">Consulta:</span>
@@ -215,133 +213,61 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
         </div>
       </div>
 
-      {/* Grid Principal: Silhueta Interativa à Esquerda + Painel de Métricas e Evolução à Direita */}
+      {/* Grid Principal */}
       <div className="silhueta-main-grid">
-        {/* Painel da Silhueta Corporal com Hotspots */}
+        {/* Painel da Silhueta */}
         <div className="silhueta-viewport-container">
           <div className="silhueta-viewport-header">
-            <span className="silhueta-model-badge">
-              Silhueta {isFeminino ? "Feminina" : "Masculina"} · {paciente.nome || "Paciente"}
-            </span>
+            <div className="silhueta-gender-toggle">
+              <button
+                type="button"
+                className={`gender-pill-btn ${!isFeminino ? "active" : ""}`}
+                onClick={() => setSexoVisualizacao("Masculino")}
+              >
+                Masculino
+              </button>
+              <button
+                type="button"
+                className={`gender-pill-btn ${isFeminino ? "active" : ""}`}
+                onClick={() => setSexoVisualizacao("Feminino")}
+              >
+                Feminino
+              </button>
+            </div>
             <span className="silhueta-click-hint">Clique nos pontos para detalhes</span>
           </div>
 
           <div className="silhueta-canvas-wrapper">
-            {/* Silhueta Anatômica SVG Vetorial Elegante */}
             <svg
-              viewBox="0 0 280 480"
+              viewBox="0 0 330 700"
               className="silhueta-vector-svg"
               preserveAspectRatio="xMidYMid meet"
             >
               <defs>
-                {/* Gradiente do Corpo */}
-                <linearGradient id="bodyMeshGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.32" />
-                  <stop offset="50%" stopColor="var(--primary)" stopOpacity="0.18" />
-                  <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.08" />
-                </linearGradient>
-
                 <filter id="silhouetteGlow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="rgba(16, 185, 129, 0.25)" />
+                  <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="rgba(16, 185, 129, 0.35)" />
                 </filter>
               </defs>
 
-              {/* Traçado Anatômico do Corpo */}
-              {isFeminino ? (
-                // Silhueta Feminina
-                <g className="body-silhouette-shape" filter="url(#silhouetteGlow)">
-                  {/* Cabeça e Pescoço */}
-                  <ellipse cx="140" cy="42" rx="22" ry="26" fill="url(#bodyMeshGradient)" stroke="var(--primary)" strokeWidth="2.2" />
-                  <path d="M 133 66 L 133 80 L 147 80 L 147 66" fill="url(#bodyMeshGradient)" stroke="var(--primary)" strokeWidth="2" />
-                  
-                  {/* Tronco Feminino (Ampulheta Suave) */}
-                  <path
-                    d="M 120 82 
-                       C 95 85, 78 105, 68 135 
-                       C 60 160, 56 195, 52 235
-                       C 50 250, 56 255, 64 252
-                       C 72 245, 82 205, 92 170
-                       C 98 150, 105 130, 114 135
-                       C 118 160, 120 185, 122 200
-                       C 114 220, 106 242, 102 265
-                       C 96 300, 104 330, 108 360
-                       C 112 390, 110 425, 112 455
-                       C 114 465, 124 465, 126 455
-                       C 130 420, 132 375, 136 325
-                       L 140 280
-                       L 144 325
-                       C 148 375, 150 420, 154 455
-                       C 156 465, 166 465, 168 455
-                       C 170 425, 168 390, 172 360
-                       C 176 330, 184 300, 178 265
-                       C 174 242, 166 220, 158 200
-                       C 160 185, 162 160, 166 135
-                       C 175 130, 182 150, 188 170
-                       C 198 205, 208 245, 216 252
-                       C 224 255, 230 250, 228 235
-                       C 224 195, 220 160, 212 135
-                       C 202 105, 185 85, 160 82
-                       Z"
-                    fill="url(#bodyMeshGradient)"
-                    stroke="var(--primary)"
-                    strokeWidth="2.2"
-                    strokeLinejoin="round"
-                  />
-                </g>
-              ) : (
-                // Silhueta Masculina (Ombros Largos em V)
-                <g className="body-silhouette-shape" filter="url(#silhouetteGlow)">
-                  {/* Cabeça e Pescoço */}
-                  <ellipse cx="140" cy="40" rx="23" ry="28" fill="url(#bodyMeshGradient)" stroke="var(--primary)" strokeWidth="2.2" />
-                  <path d="M 132 66 L 132 82 L 148 82 L 148 66" fill="url(#bodyMeshGradient)" stroke="var(--primary)" strokeWidth="2" />
+              {/* Silhueta Oficial com Alta Definição */}
+              <image
+                href={isFeminino ? "/silhueta-feminina.png" : "/silhueta-masculina.png"}
+                x="0"
+                y="0"
+                width="330"
+                height="700"
+                filter="url(#silhouetteGlow)"
+                className="exact-user-silhouette-image"
+              />
 
-                  {/* Tronco Masculino */}
-                  <path
-                    d="M 115 84 
-                       C 85 88, 68 110, 56 142 
-                       C 48 168, 44 205, 40 245
-                       C 38 258, 46 262, 54 256
-                       C 62 248, 74 205, 84 165
-                       C 92 145, 102 128, 114 135
-                       C 118 165, 122 195, 124 210
-                       C 118 230, 112 250, 108 275
-                       C 102 310, 108 340, 112 370
-                       C 116 400, 114 430, 116 458
-                       C 118 468, 128 468, 130 458
-                       C 134 425, 135 380, 138 330
-                       L 140 285
-                       L 142 330
-                       C 145 380, 146 425, 150 458
-                       C 152 468, 162 468, 164 458
-                       C 166 430, 164 400, 168 370
-                       C 172 340, 178 310, 172 275
-                       C 168 250, 162 230, 156 210
-                       C 158 195, 162 165, 166 135
-                       C 178 128, 188 145, 196 165
-                       C 206 205, 218 248, 226 256
-                       C 234 262, 242 258, 240 245
-                       C 236 205, 232 168, 224 142
-                       C 212 110, 195 88, 165 84
-                       Z"
-                    fill="url(#bodyMeshGradient)"
-                    stroke="var(--primary)"
-                    strokeWidth="2.2"
-                    strokeLinejoin="round"
-                  />
-                </g>
-              )}
+              {/* Linha Central Guia Sutil */}
+              <line x1="165" y1="120" x2="165" y2="400" stroke="var(--primary)" strokeDasharray="3 3" strokeWidth="1" opacity="0.35" />
 
-              {/* Linhas Anatômicas Internas Sutis */}
-              <line x1="140" y1="88" x2="140" y2="275" stroke="var(--primary)" strokeDasharray="3 3" strokeWidth="1" opacity="0.3" />
-              <line x1="105" y1="135" x2="175" y2="135" stroke="var(--primary)" strokeDasharray="2 2" strokeWidth="1" opacity="0.25" />
-              <line x1="116" y1="200" x2="164" y2="200" stroke="var(--primary)" strokeDasharray="2 2" strokeWidth="1" opacity="0.25" />
-              <line x1="108" y1="255" x2="172" y2="255" stroke="var(--primary)" strokeDasharray="2 2" strokeWidth="1" opacity="0.25" />
-
-              {/* Hotspots Anatômicos Pulsantes com Tooltips Integrados */}
+              {/* Hotspots Anatômicos Interativos */}
               {evolucaoMedidas.map((medida) => {
                 const isSelected = medida.key === pontoAtivoKey;
-                const posX = (medida.x / 100) * 280;
-                const posY = (medida.y / 100) * 480;
+                const posX = (medida.x / 100) * 330;
+                const posY = (medida.y / 100) * 700;
 
                 return (
                   <g
@@ -350,50 +276,49 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
                     onClick={() => setPontoAtivoKey(medida.key)}
                     style={{ cursor: "pointer" }}
                   >
-                    {/* Alvo invisível amplo para clique fácil */}
-                    <circle cx={posX} cy={posY} r="22" fill="transparent" />
+                    {/* Alvo invisível amplo para toque */}
+                    <circle cx={posX} cy={posY} r="26" fill="transparent" />
 
                     {/* Halo de Pulso */}
                     <circle
                       cx={posX}
                       cy={posY}
-                      r={isSelected ? "14" : "10"}
+                      r={isSelected ? "16" : "11"}
                       fill={medida.diffColor}
-                      opacity={isSelected ? "0.4" : "0.2"}
+                      opacity={isSelected ? "0.45" : "0.25"}
                       className="hotspot-pulse"
                     />
 
-                    {/* Círculo do Nó */}
+                    {/* Círculo do Ponto */}
                     <circle
                       cx={posX}
                       cy={posY}
-                      r={isSelected ? "7" : "5"}
+                      r={isSelected ? "8" : "6"}
                       fill="var(--surface)"
                       stroke={medida.diffColor}
-                      strokeWidth={isSelected ? "3" : "2"}
+                      strokeWidth={isSelected ? "3.5" : "2.5"}
                     />
 
-                    {/* Ponto Central */}
                     {isSelected && (
-                      <circle cx={posX} cy={posY} r="3" fill={medida.diffColor} />
+                      <circle cx={posX} cy={posY} r="3.5" fill={medida.diffColor} />
                     )}
 
-                    {/* Badge Flutuante ao Lado do Ponto */}
-                    <g transform={`translate(${posX > 140 ? posX + 12 : posX - 68}, ${posY - 12})`}>
+                    {/* Badge Flutuante */}
+                    <g transform={`translate(${posX > 165 ? posX + 14 : posX - 76}, ${posY - 14})`}>
                       <rect
-                        width="56"
-                        height="24"
-                        rx="12"
+                        width="62"
+                        height="26"
+                        rx="13"
                         fill="var(--surface)"
                         stroke={isSelected ? medida.diffColor : "var(--border)"}
-                        strokeWidth={isSelected ? "1.5" : "1"}
-                        filter="drop-shadow(0 2px 6px rgba(0,0,0,0.12))"
+                        strokeWidth={isSelected ? "1.8" : "1"}
+                        filter="drop-shadow(0 2px 8px rgba(0,0,0,0.15))"
                       />
                       <text
-                        x="28"
-                        y="15"
+                        x="31"
+                        y="17"
                         textAnchor="middle"
-                        fontSize="10"
+                        fontSize="10.5"
                         fontWeight="800"
                         fill="var(--text-main)"
                       >
@@ -407,9 +332,8 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
           </div>
         </div>
 
-        {/* Painel Lateral: Métricas Detalhadas & Comparativo Evolutivo */}
+        {/* Painel Lateral: Métricas Detalhadas */}
         <div className="silhueta-details-panel">
-          {/* Card da Medida Ativa em Foco */}
           {medidaSelecionada && (
             <div className="focused-measure-card animate-fade-in">
               <div className="focused-card-top">
@@ -455,7 +379,7 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
             </div>
           )}
 
-          {/* Grid de Todas as Circunferências Corporais */}
+          {/* Grid de Circunferências */}
           <div className="all-measures-grid-section">
             <h4 className="all-measures-title">Painel de Circunferências Antropométricas</h4>
             
@@ -499,7 +423,7 @@ export default function SilhuetaCorporalEvolucao({ paciente = {}, consultas = []
             </div>
           </div>
 
-          {/* Informações Extras de Composição (Gordura & Peso) */}
+          {/* Informações Extras de Composição */}
           <div className="silhueta-extra-metrics-row">
             <div className="extra-metric-card">
               <span className="extra-metric-lbl">% Gordura Corporal</span>
