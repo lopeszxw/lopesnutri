@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { sql } from "../db";
 import EvolucaoPesoChart from "../components/EvolucaoPesoChart";
+import PlanoAlimentarManager from "../components/PlanoAlimentarManager";
 import { parsePgArray, formatDate, safeDateString, formatPhone } from "../utils/helpers";
 
 export default function PacienteDetalhes() {
@@ -610,58 +611,13 @@ export default function PacienteDetalhes() {
             </div>
           </div>
 
-          {/* Seção de Planos Alimentares */}
-          <div className="profile-card">
-            <div className="card-header-flex">
-              <div className="profile-card-title" style={{ marginBottom: 0 }}>
-                <Utensils size={18} color="var(--primary)" />
-                <div>
-                  <h3>Planos Alimentares</h3>
-                  <span className="chart-subtitle">Prescrições e cardápios personalizados</span>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                className="btn-secondary-action btn-disabled-hint"
-                disabled
-                title="Módulo de geração de plano alimentar em desenvolvimento"
-              >
-                <Sparkles size={15} />
-                <span>Gerar Plano Alimentar</span>
-              </button>
-            </div>
-
-            <div className="planos-alimentares-container" style={{ marginTop: "1.25rem" }}>
-              {planos.length === 0 ? (
-                <div className="empty-state-box" style={{ padding: "2.25rem 1.5rem" }}>
-                  <Utensils size={36} className="empty-icon-muted" />
-                  <h4>Nenhum plano alimentar gerado ainda</h4>
-                  <p>
-                    Em breve você poderá prescrever e gerar cardápios personalizados diretamente para {paciente.nome}.
-                  </p>
-                </div>
-              ) : (
-                <div className="planos-list" style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
-                  {planos.map((plano, index) => (
-                    <div key={plano.id || index} className="plano-item-card">
-                      <div className="plano-header-row">
-                        <span className="plano-title">
-                          {plano.conteudo?.titulo || `Plano Alimentar #${planos.length - index}`}
-                        </span>
-                        <span className="plano-date-badge">
-                          <Calendar size={13} />
-                          {formatDate(plano.created_at)}
-                        </span>
-                      </div>
-                      {plano.conteudo?.descricao && (
-                        <p className="plano-desc">{plano.conteudo.descricao}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+          {/* Seção Completa de Planos Alimentares com IA */}
+          <div className="profile-card plano-alimentar-card-wrap">
+            <PlanoAlimentarManager
+              paciente={paciente}
+              planos={planos}
+              onPlanoSaved={fetchPacienteData}
+            />
           </div>
         </div>
       </div>

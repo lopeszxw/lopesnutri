@@ -4286,3 +4286,496 @@ button {
     justify-content: space-between;
   }
 }
+
+/* ==========================================================================
+   Plano Alimentar Manager & AI Generation UI
+   ========================================================================== */
+.plano-alimentar-manager-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.plano-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.btn-ai-pulse {
+  background: linear-gradient(135deg, #111311 0%, #24352b 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme="dark"] .btn-ai-pulse {
+  background: linear-gradient(135deg, #ffffff 0%, #d5d5d5 100%);
+  color: #111311 !important;
+}
+
+.btn-ai-pulse:hover {
+  box-shadow: 0 4px 18px rgba(36, 53, 43, 0.4);
+}
+
+/* AI Loading Box */
+.plano-ai-loading-box {
+  background: var(--surface-secondary);
+  border: 1.5px dashed var(--primary);
+  border-radius: var(--radius-xl);
+  padding: 2.25rem 1.5rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.loading-card-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.ai-spinner-orb {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--primary-light);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
+}
+
+.spin-slow {
+  animation: spin 3s linear infinite;
+}
+
+.loading-text-stack h4 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.loading-dynamic-step {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin-top: 0.35rem;
+  min-height: 24px;
+  animation: fadeIn 0.3s ease;
+}
+
+.loading-progress-bar {
+  width: 100%;
+  height: 6px;
+  background-color: var(--border);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+
+.loading-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary) 0%, var(--accent-mint) 100%);
+  border-radius: var(--radius-full);
+  transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Editor Card */
+.plano-editor-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.editor-meta-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.editor-meta-fields {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  min-width: 300px;
+  flex-wrap: wrap;
+}
+
+.editor-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+/* Days Tabs Navigation */
+.plano-days-tabs-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-light);
+  scrollbar-width: thin;
+}
+
+.plano-day-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.65rem 1.15rem;
+  background-color: var(--surface-secondary);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-full);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.plano-day-tab-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background-color: var(--surface-hover);
+}
+
+.plano-day-tab-btn.active {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: #ffffff;
+  box-shadow: var(--shadow-btn);
+}
+
+[data-theme="dark"] .plano-day-tab-btn.active {
+  background-color: #ffffff;
+  border-color: #ffffff;
+  color: #111311;
+}
+
+.tab-active-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+
+/* Day Content & Meals */
+.plano-day-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.day-content-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.day-header-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  background-color: var(--primary-light);
+  color: var(--primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.day-header-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.meals-grid-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.meal-card-block {
+  background-color: var(--surface-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.meal-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.meal-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.meal-icon-pill {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.meal-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.meal-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: block;
+}
+
+.meal-options-count {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-light);
+}
+
+.meal-options-inputs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.meal-option-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+}
+
+.opt-number-badge {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.meal-input-field {
+  flex: 1;
+  padding: 0.65rem 0.95rem;
+  font-size: 0.88rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-main);
+  transition: all 0.2s ease;
+}
+
+.meal-input-field:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.08);
+}
+
+/* History Cards */
+.planos-history-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+}
+
+.planos-history-card:hover {
+  border-color: var(--primary);
+}
+
+.plano-history-header {
+  padding: 1.15rem 1.35rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.plano-history-left {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.history-icon-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: var(--primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.plano-history-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.badge-ai-pill {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.15rem 0.55rem;
+  border-radius: var(--radius-full);
+  background-color: var(--primary-light);
+  color: var(--primary);
+  border: 1px solid var(--border);
+}
+
+.plano-history-sub {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+
+.plano-history-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.btn-toggle-expand {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  background-color: var(--surface-secondary);
+  transition: all 0.2s ease;
+}
+
+.btn-toggle-expand:hover {
+  color: var(--text-main);
+  background-color: var(--border);
+}
+
+/* Expanded Viewer */
+.plano-expanded-viewer {
+  padding: 1.25rem 1.35rem;
+  border-top: 1px solid var(--border-light);
+  background-color: var(--surface-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.expanded-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.expanded-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.expanded-days-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.expanded-day-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.expanded-day-title {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--primary);
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.expanded-meals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.expanded-meal-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.expanded-meal-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.expanded-options-bullet {
+  padding-left: 1.15rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+  .editor-meta-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .editor-header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .meal-option-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+  .opt-number-badge {
+    text-align: left;
+  }
+}
+
